@@ -1,1257 +1,393 @@
 <?php
-/* =========================================================
-   PORTFOLIO PHP - RANIA
-   Un seul fichier : PHP + HTML + CSS
-   Les images sont récupérées automatiquement depuis /images
-   ========================================================= */
+session_start();
 
 /* =========================
    CONFIGURATION
 ========================= */
 
-$nomSite = "MyProjects";
+$titre = "Mon Application PHP";
+$message = "Bienvenue dans mon application";
 
-$dossierImages = __DIR__ . "/images/";
-$urlImages = "images/";
-
-$extensionsAutorisees = [
-    "jpg",
-    "jpeg",
-    "png",
-    "gif",
-    "webp"
-];
-
-
-/* =========================
-   RÉCUPÉRATION DES PHOTOS
-========================= */
-
-$images = [];
-
-if (is_dir($dossierImages)) {
-
-    $fichiers = scandir($dossierImages);
-
-    foreach ($fichiers as $fichier) {
-
-        if ($fichier === "." || $fichier === "..") {
-            continue;
-        }
-
-        $chemin = $dossierImages . $fichier;
-
-        if (!is_file($chemin)) {
-            continue;
-        }
-
-        $extension = strtolower(
-            pathinfo($fichier, PATHINFO_EXTENSION)
-        );
-
-        if (in_array($extension, $extensionsAutorisees)) {
-            $images[] = $fichier;
-        }
-    }
+/* Compteur de visites */
+if (!isset($_SESSION['visites'])) {
+    $_SESSION['visites'] = 0;
 }
 
-/* Trier les photos */
-sort($images);
+$_SESSION['visites']++;
 
-
-/* =========================
-   STATISTIQUES
-========================= */
-
-$nombreProjets = count($images);
-
-$technologies = [
-    "HTML",
-    "CSS",
-    "JavaScript",
-    "PHP",
-    "MySQL",
-    "PDO",
-    "AJAX",
-    "JSON"
-];
-
-$nombreTechnologies = count($technologies);
-
+/* Date et heure */
+$date = date("d/m/Y");
+$heure = date("H:i:s");
 
 /* =========================
-   NOM DU PROJET
+   TRAITEMENT DU FORMULAIRE
 ========================= */
 
-function nomProjet($fichier)
-{
-    $nom = pathinfo(
-        $fichier,
-        PATHINFO_FILENAME
-    );
+$nom = "";
+$email = "";
+$messageFormulaire = "";
 
-    $nom = str_replace(
-        ["_", "-"],
-        " ",
-        $nom
-    );
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    return ucfirst($nom);
-}
-
-
-/* =========================
-   DESCRIPTION
-========================= */
-
-function descriptionProjet($fichier)
-{
-    $nom = strtolower(
-        pathinfo(
-            $fichier,
-            PATHINFO_FILENAME
-        )
-    );
-
-    if (strpos($nom, "php") !== false) {
-        return "Application web développée avec PHP, MySQL et PDO.";
-    }
-
-    if (
-        strpos($nom, "ajax") !== false ||
-        strpos($nom, "json") !== false
-    ) {
-        return "Formulaire dynamique utilisant JavaScript, AJAX, API et JSON.";
-    }
-
-    if (
-        strpos($nom, "mcd") !== false ||
-        strpos($nom, "mld") !== false ||
-        strpos($nom, "mpd") !== false
-    ) {
-        return "Conception d'une base de données avec MCD, MLD et MPD.";
-    }
-
-    if (
-        strpos($nom, "boutique") !== false ||
-        strpos($nom, "shop") !== false ||
-        strpos($nom, "ecommerce") !== false
-    ) {
-        return "Projet de boutique en ligne avec présentation des produits.";
-    }
-
-    return "Projet web réalisé avec différentes technologies.";
+    $nom = htmlspecialchars($_POST["nom"] ?? "");
+    $email = htmlspecialchars($_POST["email"] ?? "");
+    $messageFormulaire = htmlspecialchars($_POST["message"] ?? "");
 }
 
 ?>
 
 <!DOCTYPE html>
-
 <html lang="fr">
 
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>
-        <?= htmlspecialchars($nomSite) ?>
-    </title>
-
+    <title><?= $titre ?></title>
 
     <style>
-
-        /* =====================================================
-           RESET
-        ===================================================== */
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Segoe UI", Arial, sans-serif;
         }
-
-
-        html {
-            scroll-behavior: smooth;
-        }
-
 
         body {
-            background: #f1f5f9;
-            color: #1e293b;
-            line-height: 1.6;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #071827, #123b5d, #526575);
+            color: white;
+            min-height: 100vh;
         }
-
-
-        /* =====================================================
-           NAVIGATION
-        ===================================================== */
 
         header {
-            background: #0f172a;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow:
-                0 3px 15px rgba(15, 23, 42, 0.25);
-        }
-
-
-        nav {
-            max-width: 1200px;
-            margin: auto;
-            padding: 18px 25px;
-
+            background: rgba(0, 0, 0, 0.35);
+            padding: 20px 8%;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-
         .logo {
-            color: white;
-            text-decoration: none;
-            font-size: 25px;
+            font-size: 26px;
             font-weight: bold;
         }
 
-
-        .logo span {
-            color: #38bdf8;
-        }
-
-
-        .nav-links {
-            list-style: none;
-
-            display: flex;
-
-            gap: 30px;
-        }
-
-
-        .nav-links a {
-            color: #cbd5e1;
+        nav a {
+            color: white;
             text-decoration: none;
-            font-size: 16px;
-            transition: 0.3s;
+            margin-left: 25px;
+            font-weight: bold;
         }
 
-
-        .nav-links a:hover {
-            color: #38bdf8;
+        nav a:hover {
+            color: #8fd3ff;
         }
-
-
-        /* =====================================================
-           HERO
-        ===================================================== */
 
         .hero {
-
-            min-height: 600px;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #0f172a,
-                    #1e3a8a,
-                    #2563eb
-                );
-
-            color: white;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
             text-align: center;
-
-            padding: 80px 20px;
+            padding: 70px 20px 40px;
         }
-
-
-        .hero-content {
-            max-width: 850px;
-        }
-
 
         .hero h1 {
-            font-size: 58px;
-            margin-bottom: 20px;
-        }
-
-
-        .hero h1 span {
-            color: #7dd3fc;
-        }
-
-
-        .hero p {
-            font-size: 20px;
-            color: #dbeafe;
-
-            max-width: 700px;
-
-            margin: auto;
-
-            margin-bottom: 35px;
-        }
-
-
-        .hero-buttons {
-
-            display: flex;
-
-            justify-content: center;
-
-            gap: 15px;
-
-            flex-wrap: wrap;
-        }
-
-
-        .btn {
-
-            display: inline-block;
-
-            padding: 13px 28px;
-
-            border-radius: 8px;
-
-            text-decoration: none;
-
-            font-weight: bold;
-
-            transition: 0.3s;
-        }
-
-
-        .btn-primary {
-
-            background: #38bdf8;
-
-            color: #082f49;
-        }
-
-
-        .btn-primary:hover {
-
-            background: #7dd3fc;
-
-            transform: translateY(-3px);
-        }
-
-
-        .btn-secondary {
-
-            border: 1px solid #93c5fd;
-
-            color: white;
-        }
-
-
-        .btn-secondary:hover {
-
-            background: rgba(255,255,255,0.1);
-
-            transform: translateY(-3px);
-        }
-
-
-        /* =====================================================
-           STATISTIQUES
-        ===================================================== */
-
-        .stats {
-
-            max-width: 1000px;
-
-            margin: -50px auto 0;
-
-            background: white;
-
-            border-radius: 15px;
-
-            padding: 30px;
-
-            display: grid;
-
-            grid-template-columns:
-                repeat(3, 1fr);
-
-            gap: 20px;
-
-            position: relative;
-
-            box-shadow:
-                0 10px 30px
-                rgba(15, 23, 42, 0.12);
-        }
-
-
-        .stat {
-
-            text-align: center;
-
-            border-right:
-                1px solid #e2e8f0;
-        }
-
-
-        .stat:last-child {
-            border-right: none;
-        }
-
-
-        .stat h2 {
-
-            color: #2563eb;
-
-            font-size: 32px;
-        }
-
-
-        .stat p {
-            color: #64748b;
-        }
-
-
-        /* =====================================================
-           PROJETS
-        ===================================================== */
-
-        .projects {
-
-            max-width: 1200px;
-
-            margin: auto;
-
-            padding: 100px 25px;
-        }
-
-
-        .section-title {
-
-            text-align: center;
-
-            margin-bottom: 50px;
-        }
-
-
-        .section-title h2 {
-
-            font-size: 38px;
-
-            color: #0f172a;
-
-            margin-bottom: 10px;
-        }
-
-
-        .section-title p {
-
-            color: #64748b;
-
-            font-size: 17px;
-        }
-
-
-        .project-grid {
-
-            display: grid;
-
-            grid-template-columns:
-                repeat(
-                    auto-fit,
-                    minmax(280px, 1fr)
-                );
-
-            gap: 25px;
-        }
-
-
-        /* =====================================================
-           CARTE
-        ===================================================== */
-
-        .project-card {
-
-            background: white;
-
-            border-radius: 14px;
-
-            overflow: hidden;
-
-            border: 1px solid #e2e8f0;
-
-            box-shadow:
-                0 5px 20px
-                rgba(15, 23, 42, 0.08);
-
-            transition: 0.3s;
-        }
-
-
-        .project-card:hover {
-
-            transform: translateY(-8px);
-
-            box-shadow:
-                0 15px 35px
-                rgba(15, 23, 42, 0.15);
-        }
-
-
-        /* =====================================================
-           PHOTO
-        ===================================================== */
-
-        .project-image {
-
-            height: 220px;
-
-            width: 100%;
-
-            overflow: hidden;
-
-            background: #e2e8f0;
-        }
-
-
-        .project-image img {
-
-            width: 100%;
-
-            height: 100%;
-
-            object-fit: cover;
-
-            display: block;
-
-            transition: 0.4s ease;
-        }
-
-
-        .project-card:hover
-        .project-image img {
-
-            transform: scale(1.08);
-        }
-
-
-        /* =====================================================
-           CONTENU CARTE
-        ===================================================== */
-
-        .project-content {
-
-            padding: 25px;
-        }
-
-
-        .project-content h3 {
-
-            color: #0f172a;
-
-            margin-bottom: 10px;
-
-            font-size: 22px;
-        }
-
-
-        .project-content p {
-
-            color: #64748b;
-
-            margin-bottom: 20px;
-        }
-
-
-        .project-link {
-
-            color: #2563eb;
-
-            text-decoration: none;
-
-            font-weight: bold;
-        }
-
-
-        .project-link:hover {
-
-            color: #0284c7;
-        }
-
-
-        /* =====================================================
-           AUCUN PROJET
-        ===================================================== */
-
-        .empty {
-
-            grid-column: 1 / -1;
-
-            background: white;
-
-            padding: 60px;
-
-            text-align: center;
-
-            border-radius: 15px;
-
-            border: 1px solid #e2e8f0;
-        }
-
-
-        .empty h3 {
-
-            color: #0f172a;
-
-            margin-bottom: 10px;
-        }
-
-
-        .empty p {
-
-            color: #64748b;
-        }
-
-
-        /* =====================================================
-           TECHNOLOGIES
-        ===================================================== */
-
-        .technologies {
-
-            background: #e2e8f0;
-
-            padding: 80px 25px;
-        }
-
-
-        .tech-container {
-
-            max-width: 1000px;
-
-            margin: auto;
-
-            text-align: center;
-        }
-
-
-        .tech-container h2 {
-
-            font-size: 35px;
-
-            color: #0f172a;
-
-            margin-bottom: 35px;
-        }
-
-
-        .tech-list {
-
-            display: flex;
-
-            justify-content: center;
-
-            gap: 15px;
-
-            flex-wrap: wrap;
-        }
-
-
-        .tech {
-
-            background: white;
-
-            color: #334155;
-
-            padding: 12px 22px;
-
-            border-radius: 25px;
-
-            border:
-                1px solid #cbd5e1;
-
-            font-weight: bold;
-
-            transition: 0.3s;
-        }
-
-
-        .tech:hover {
-
-            background: #2563eb;
-
-            color: white;
-
-            border-color: #2563eb;
-        }
-
-
-        /* =====================================================
-           CONTACT
-        ===================================================== */
-
-        .contact {
-
-            max-width: 900px;
-
-            margin: auto;
-
-            padding: 100px 25px;
-
-            text-align: center;
-        }
-
-
-        .contact h2 {
-
-            font-size: 38px;
-
-            color: #0f172a;
-
+            font-size: 45px;
             margin-bottom: 15px;
         }
 
-
-        .contact p {
-
-            color: #64748b;
-
-            margin-bottom: 30px;
+        .hero p {
+            font-size: 19px;
+            color: #d8e8f2;
         }
 
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: auto;
+        }
 
-        /* =====================================================
-           FOOTER
-        ===================================================== */
+        .photos {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin: 35px 0;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.12);
+            border-radius: 18px;
+            padding: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        }
+
+        .card img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 14px;
+            display: block;
+        }
+
+        .card h2 {
+            margin: 15px 5px 5px;
+        }
+
+        .card p {
+            color: #d6e5ee;
+            margin: 5px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat {
+            background: rgba(255,255,255,0.12);
+            padding: 20px 35px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat strong {
+            display: block;
+            font-size: 28px;
+            color: #8fd3ff;
+        }
+
+        form {
+            background: rgba(255,255,255,0.12);
+            padding: 30px;
+            border-radius: 18px;
+            max-width: 650px;
+            margin: 40px auto;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 13px;
+            margin: 8px 0 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #2879ad;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #3f94c9;
+        }
+
+        .success {
+            background: rgba(0, 150, 100, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
 
         footer {
-
-            background: #0f172a;
-
-            color: #cbd5e1;
-
             text-align: center;
-
-            padding: 30px 20px;
+            padding: 30px;
+            margin-top: 40px;
+            background: rgba(0,0,0,0.3);
+            color: #d1dce3;
         }
 
+        @media(max-width: 700px) {
 
-        footer strong {
-
-            color: #38bdf8;
-        }
-
-
-        /* =====================================================
-           RESPONSIVE
-        ===================================================== */
-
-        @media (max-width: 768px) {
-
-            nav {
-
-                flex-direction: column;
-
-                gap: 15px;
-            }
-
-
-            .nav-links {
-
-                gap: 12px;
-
-                flex-wrap: wrap;
-
-                justify-content: center;
-            }
-
-
-            .nav-links a {
-
-                font-size: 14px;
-            }
-
-
-            .hero h1 {
-
-                font-size: 40px;
-            }
-
-
-            .hero p {
-
-                font-size: 17px;
-            }
-
-
-            .stats {
-
-                margin: -30px 20px 0;
-
+            .photos {
                 grid-template-columns: 1fr;
             }
 
-
-            .stat {
-
-                border-right: none;
-
-                border-bottom:
-                    1px solid #e2e8f0;
-
-                padding-bottom: 15px;
+            header {
+                flex-direction: column;
+                gap: 15px;
             }
 
-
-            .stat:last-child {
-
-                border-bottom: none;
+            nav a {
+                margin: 0 8px;
             }
 
+            .hero h1 {
+                font-size: 32px;
+            }
         }
 
     </style>
-
 </head>
-
 
 <body>
 
-
-<!-- =====================================================
-     NAVIGATION
-===================================================== -->
-
 <header>
 
+    <div class="logo">
+        Mon Application
+    </div>
+
     <nav>
-
-        <a
-            href="index.php"
-            class="logo"
-        >
-            My<span>Projects</span>
-        </a>
-
-
-        <ul class="nav-links">
-
-            <li>
-                <a href="#accueil">
-                    Accueil
-                </a>
-            </li>
-
-            <li>
-                <a href="#projets">
-                    Projets
-                </a>
-            </li>
-
-            <li>
-                <a href="#technologies">
-                    Technologies
-                </a>
-            </li>
-
-            <li>
-                <a href="#contact">
-                    Contact
-                </a>
-            </li>
-
-        </ul>
-
+        <a href="index.php">Accueil</a>
+        <a href="#photos">Photos</a>
+        <a href="#contact">Contact</a>
+        <a href="api.php">API</a>
     </nav>
 
 </header>
 
 
+<section class="hero">
 
-<!-- =====================================================
-     ACCUEIL
-===================================================== -->
+    <h1><?= $titre ?></h1>
 
-<section
-    class="hero"
-    id="accueil"
->
+    <p><?= $message ?></p>
 
-    <div class="hero-content">
-
-        <h1>
-
-            Bienvenue dans
-
-            <span>
-                mes projets
-            </span>
-
-        </h1>
+</section>
 
 
-        <p>
+<div class="container">
 
-            Découvrez mes différents projets web,
-            applications et travaux réalisés avec
-            différentes technologies.
+    <!-- STATISTIQUES -->
 
-        </p>
+    <div class="stats">
 
+        <div class="stat">
+            <strong><?= $_SESSION['visites'] ?></strong>
+            Visites
+        </div>
 
-        <div class="hero-buttons">
+        <div class="stat">
+            <strong><?= $date ?></strong>
+            Date
+        </div>
 
-            <a
-                href="#projets"
-                class="btn btn-primary"
-            >
-                Voir mes projets
-            </a>
-
-
-            <a
-                href="#contact"
-                class="btn btn-secondary"
-            >
-                Me contacter
-            </a>
-
+        <div class="stat">
+            <strong><?= $heure ?></strong>
+            Heure
         </div>
 
     </div>
 
-</section>
 
+    <!-- PHOTOS -->
 
+    <section id="photos">
 
-<!-- =====================================================
-     STATISTIQUES
-===================================================== -->
+        <div class="photos">
 
-<section class="stats">
+            <div class="card">
 
+                <img src="../public/images/PH3.jpeg"
+                     alt="Photo PH3">
 
-    <div class="stat">
-
-        <h2>
-
-            <?= str_pad(
-                $nombreProjets,
-                2,
-                "0",
-                STR_PAD_LEFT
-            ) ?>
-
-        </h2>
-
-        <p>
-            Projets
-        </p>
-
-    </div>
-
-
-    <div class="stat">
-
-        <h2>
-
-            <?= str_pad(
-                $nombreTechnologies,
-                2,
-                "0",
-                STR_PAD_LEFT
-            ) ?>
-
-        </h2>
-
-        <p>
-            Technologies
-        </p>
-
-    </div>
-
-
-    <div class="stat">
-
-        <h2>
-            100%
-        </h2>
-
-        <p>
-            Motivation
-        </p>
-
-    </div>
-
-
-</section>
-
-
-
-<!-- =====================================================
-     PROJETS
-===================================================== -->
-
-<section
-    class="projects"
-    id="projets"
->
-
-
-    <div class="section-title">
-
-        <h2>
-            Mes projets
-        </h2>
-
-        <p>
-            Une sélection de mes travaux et réalisations.
-        </p>
-
-    </div>
-
-
-
-    <div class="project-grid">
-
-
-        <?php if (count($images) > 0): ?>
-
-
-            <?php foreach ($images as $image): ?>
-
-                <?php
-
-                $nom = nomProjet($image);
-
-                $description =
-                    descriptionProjet($image);
-
-                $cheminImage =
-                    $urlImages . $image;
-
-                ?>
-
-
-                <article class="project-card">
-
-
-                    <!-- PHOTO -->
-
-                    <div class="project-image">
-
-                        <img
-
-                            src="<?= htmlspecialchars(
-                                $cheminImage
-                            ) ?>"
-
-                            alt="<?= htmlspecialchars(
-                                $nom
-                            ) ?>"
-
-                            loading="lazy"
-
-                        >
-
-                    </div>
-
-
-
-                    <!-- TEXTE -->
-
-                    <div class="project-content">
-
-
-                        <h3>
-
-                            <?= htmlspecialchars(
-                                $nom
-                            ) ?>
-
-                        </h3>
-
-
-                        <p>
-
-                            <?= htmlspecialchars(
-                                $description
-                            ) ?>
-
-                        </p>
-
-
-                        <a
-
-                            href="<?= htmlspecialchars(
-                                $cheminImage
-                            ) ?>"
-
-                            target="_blank"
-
-                            class="project-link"
-
-                        >
-
-                            Voir le projet →
-
-                        </a>
-
-
-                    </div>
-
-
-                </article>
-
-
-            <?php endforeach; ?>
-
-
-        <?php else: ?>
-
-
-            <div class="empty">
-
-                <h3>
-                    Aucun projet
-                </h3>
+                <h2>Photo 1</h2>
 
                 <p>
-
-                    Ajoutez vos photos dans le dossier
-                    <strong>images</strong>.
-
+                    Première image de mon application.
                 </p>
 
             </div>
 
 
-        <?php endif; ?>
+            <div class="card">
 
+                <img src="../public/images/PH7.jpeg"
+                     alt="Photo PH7">
 
-    </div>
+                <h2>Photo 2</h2>
 
-</section>
+                <p>
+                    Deuxième image de mon application.
+                </p>
 
-
-
-<!-- =====================================================
-     TECHNOLOGIES
-===================================================== -->
-
-<section
-    class="technologies"
-    id="technologies"
->
-
-
-    <div class="tech-container">
-
-
-        <h2>
-            Technologies utilisées
-        </h2>
-
-
-        <div class="tech-list">
-
-
-            <?php foreach ($technologies as $tech): ?>
-
-                <span class="tech">
-
-                    <?= htmlspecialchars(
-                        $tech
-                    ) ?>
-
-                </span>
-
-            <?php endforeach; ?>
-
+            </div>
 
         </div>
 
-
-    </div>
-
-
-</section>
+    </section>
 
 
+    <!-- FORMULAIRE -->
 
-<!-- =====================================================
-     CONTACT
-===================================================== -->
+    <section id="contact">
 
-<section
-    class="contact"
-    id="contact"
->
+        <form method="POST" action="index.php">
 
+            <h2>Contactez-nous</h2>
 
-    <h2>
-        Vous avez un projet ?
-    </h2>
+            <br>
 
+            <?php if ($_SERVER["REQUEST_METHOD"] === "POST"): ?>
 
-    <p>
+                <div class="success">
+                    Merci <?= $nom ?> ! Votre formulaire a été envoyé.
+                </div>
 
-        Découvrez mes réalisations ou contactez-moi
-        pour discuter d'un nouveau projet.
-
-    </p>
+            <?php endif; ?>
 
 
-    <a
-        href="mailto:contact@example.com"
-        class="btn btn-primary"
-    >
+            <label>Nom</label>
 
-        Me contacter
-
-    </a>
-
-
-</section>
+            <input
+                type="text"
+                name="nom"
+                placeholder="Votre nom"
+                required
+            >
 
 
+            <label>Email</label>
 
-<!-- =====================================================
-     FOOTER
-===================================================== -->
+            <input
+                type="email"
+                name="email"
+                placeholder="Votre email"
+                required
+            >
+
+
+            <label>Message</label>
+
+            <textarea
+                name="message"
+                placeholder="Votre message"
+                required
+            ></textarea>
+
+
+            <button type="submit">
+                Envoyer
+            </button>
+
+        </form>
+
+    </section>
+
+</div>
+
 
 <footer>
 
     <p>
-
-        © <?= date("Y") ?>
-
-        <strong>
-            MyProjects
-        </strong>
-
-        .
-
-        Tous droits réservés.
-
+        © <?= date("Y") ?> - Mon Application PHP
     </p>
 
 </footer>
 
-
 </body>
-
 </html>

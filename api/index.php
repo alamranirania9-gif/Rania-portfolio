@@ -1,39 +1,5 @@
 <?php
-session_start();
-
-/* =========================
-   CONFIGURATION
-========================= */
-
-$titre = "Mon Application PHP";
-$message = "Bienvenue dans mon application";
-
-/* Compteur de visites */
-if (!isset($_SESSION['visites'])) {
-    $_SESSION['visites'] = 0;
-}
-
-$_SESSION['visites']++;
-
-/* Date et heure */
-$date = date("d/m/Y");
-$heure = date("H:i:s");
-
-/* =========================
-   TRAITEMENT DU FORMULAIRE
-========================= */
-
-$nom = "";
-$email = "";
-$messageFormulaire = "";
-
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-
-    $nom = htmlspecialchars($_POST["nom"] ?? "");
-    $email = htmlspecialchars($_POST["email"] ?? "");
-    $messageFormulaire = htmlspecialchars($_POST["message"] ?? "");
-}
-
+// Portfolio de Oumaima Elharti
 ?>
 
 <!DOCTYPE html>
@@ -43,7 +9,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title><?= $titre ?></title>
+    <title>Oumaima Elharti | Portfolio</title>
+
+    <meta name="description"
+        content="Portfolio professionnel de Oumaima Elharti, étudiante en Développement Digital.">
 
     <style>
 
@@ -51,183 +20,448 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            scroll-behavior: smooth;
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #071827, #123b5d, #526575);
-            color: white;
-            min-height: 100vh;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #fff9fc;
+            color: #2d2630;
+            line-height: 1.6;
         }
 
-        header {
-            background: rgba(0, 0, 0, 0.35);
-            padding: 20px 8%;
+        /* =========================
+           NAVBAR
+        ========================= */
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 18px 8%;
+            background: rgba(255, 249, 252, 0.95);
+            backdrop-filter: blur(10px);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            z-index: 1000;
+            border-bottom: 1px solid #f1dce7;
         }
 
         .logo {
-            font-size: 26px;
-            font-weight: bold;
-        }
-
-        nav a {
-            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            color: #b85c82;
             text-decoration: none;
-            margin-left: 25px;
-            font-weight: bold;
         }
 
-        nav a:hover {
-            color: #8fd3ff;
+        .logo span {
+            color: #5f5261;
         }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: #403640;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        nav ul li a:hover {
+            color: #b85c82;
+        }
+
+        /* =========================
+           HERO
+        ========================= */
 
         .hero {
-            text-align: center;
-            padding: 70px 20px 40px;
+            min-height: 100vh;
+            padding: 140px 8% 80px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 60px;
+
+            background:
+                radial-gradient(circle at 85% 20%, #f7dce8 0, transparent 25%),
+                radial-gradient(circle at 10% 80%, #eee1f4 0, transparent 25%),
+                #fff9fc;
+        }
+
+        .hero-content {
+            max-width: 650px;
+        }
+
+        .small-title {
+            color: #b85c82;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
         }
 
         .hero h1 {
-            font-size: 45px;
-            margin-bottom: 15px;
+            font-size: clamp(45px, 6vw, 75px);
+            line-height: 1.05;
+            margin-bottom: 25px;
+            color: #302832;
+        }
+
+        .hero h1 span {
+            color: #b85c82;
         }
 
         .hero p {
             font-size: 19px;
-            color: #d8e8f2;
+            color: #716672;
+            max-width: 600px;
+            margin-bottom: 35px;
         }
 
-        .container {
-            width: 90%;
+        .buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 13px 25px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .btn-primary {
+            background: #b85c82;
+            color: white;
+            box-shadow: 0 10px 25px rgba(184, 92, 130, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            background: #a94d73;
+        }
+
+        .btn-secondary {
+            border: 1px solid #d8a8bd;
+            color: #9d4d70;
+            background: white;
+        }
+
+        .btn-secondary:hover {
+            background: #f9e8f0;
+        }
+
+        /* =========================
+           PROFILE CARD
+        ========================= */
+
+        .profile-card {
+            width: 330px;
+            min-width: 280px;
+            padding: 35px;
+
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid #efd9e5;
+            border-radius: 30px;
+
+            text-align: center;
+
+            box-shadow: 0 25px 60px rgba(100, 65, 90, 0.12);
+        }
+
+        .profile-circle {
+            width: 150px;
+            height: 150px;
+            margin: auto auto 20px;
+
+            border-radius: 50%;
+
+            background: linear-gradient(135deg, #f1cbdc, #e8d9ef);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: #9d4d70;
+            font-size: 50px;
+            font-weight: 700;
+        }
+
+        .profile-card h3 {
+            margin-bottom: 8px;
+        }
+
+        .profile-card p {
+            color: #817580;
+        }
+
+        /* =========================
+           GENERAL SECTIONS
+        ========================= */
+
+        section {
+            padding: 100px 8%;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-title span {
+            color: #b85c82;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .section-title h2 {
+            font-size: 40px;
+            margin-top: 8px;
+        }
+
+        .section-title p {
+            color: #7b707b;
+            max-width: 650px;
+            margin: 15px auto 0;
+        }
+
+        /* =========================
+           ABOUT
+        ========================= */
+
+        .about {
+            background: white;
+        }
+
+        .about-container {
+            max-width: 1000px;
+            margin: auto;
+
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .about-box {
+            padding: 35px;
+            border-radius: 25px;
+            background: #fff8fb;
+            border: 1px solid #f1dce7;
+        }
+
+        .about-box h3 {
+            margin-bottom: 15px;
+            color: #9d4d70;
+        }
+
+        .about-box p {
+            color: #6f646e;
+        }
+
+        /* =========================
+           SKILLS
+        ========================= */
+
+        .skills {
+            background: #fff9fc;
+        }
+
+        .skills-container {
             max-width: 1100px;
             margin: auto;
-        }
 
-        .photos {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 25px;
-            margin: 35px 0;
         }
 
-        .card {
-            background: rgba(255,255,255,0.12);
-            border-radius: 18px;
-            padding: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-        }
-
-        .card img {
-            width: 100%;
-            height: 300px;
-            object-fit: cover;
-            border-radius: 14px;
-            display: block;
-        }
-
-        .card h2 {
-            margin: 15px 5px 5px;
-        }
-
-        .card p {
-            color: #d6e5ee;
-            margin: 5px;
-        }
-
-        .stats {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin: 30px 0;
-        }
-
-        .stat {
-            background: rgba(255,255,255,0.12);
-            padding: 20px 35px;
-            border-radius: 15px;
-            text-align: center;
-        }
-
-        .stat strong {
-            display: block;
-            font-size: 28px;
-            color: #8fd3ff;
-        }
-
-        form {
-            background: rgba(255,255,255,0.12);
+        .skill-card {
             padding: 30px;
-            border-radius: 18px;
-            max-width: 650px;
-            margin: 40px auto;
+            background: white;
+            border: 1px solid #f0dce6;
+            border-radius: 22px;
+            transition: 0.3s;
         }
 
-        input,
-        textarea {
-            width: 100%;
-            padding: 13px;
-            margin: 8px 0 15px;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
+        .skill-card:hover {
+            transform: translateY(-7px);
+            box-shadow: 0 15px 35px rgba(100, 65, 90, 0.10);
         }
 
-        textarea {
-            height: 120px;
-            resize: vertical;
+        .skill-card .icon {
+            font-size: 32px;
+            margin-bottom: 15px;
         }
 
-        button {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            background: #2879ad;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
+        .skill-card h3 {
+            margin-bottom: 8px;
         }
 
-        button:hover {
-            background: #3f94c9;
+        .skill-card p {
+            color: #776d76;
         }
 
-        .success {
-            background: rgba(0, 150, 100, 0.3);
-            padding: 15px;
-            border-radius: 10px;
+        /* =========================
+           PROJECTS
+        ========================= */
+
+        .projects {
+            background: white;
+        }
+
+        .projects-container {
+            max-width: 1100px;
+            margin: auto;
+
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+
+        .project-card {
+            padding: 30px;
+
+            border-radius: 25px;
+            border: 1px solid #efdce6;
+
+            background: linear-gradient(
+                145deg,
+                #fff,
+                #fff7fa
+            );
+
+            transition: 0.3s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-7px);
+            box-shadow: 0 15px 40px rgba(100, 65, 90, 0.10);
+        }
+
+        .project-number {
+            color: #b85c82;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .project-card h3 {
+            margin: 12px 0;
+        }
+
+        .project-card p {
+            color: #756b74;
             margin-bottom: 20px;
         }
 
-        footer {
-            text-align: center;
-            padding: 30px;
-            margin-top: 40px;
-            background: rgba(0,0,0,0.3);
-            color: #d1dce3;
+        .project-link {
+            text-decoration: none;
+            color: #a34f73;
+            font-weight: 600;
         }
 
-        @media(max-width: 700px) {
+        /* =========================
+           CONTACT
+        ========================= */
 
-            .photos {
+        .contact {
+            background: #f8e8f0;
+            text-align: center;
+        }
+
+        .contact-content {
+            max-width: 700px;
+            margin: auto;
+        }
+
+        .contact h2 {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .contact p {
+            color: #6e626c;
+            margin-bottom: 30px;
+        }
+
+        /* =========================
+           FOOTER
+        ========================= */
+
+        footer {
+            padding: 25px;
+            text-align: center;
+            background: #2f2830;
+            color: #e9dfe5;
+        }
+
+        footer span {
+            color: #e7a9c3;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 900px) {
+
+            .hero {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .hero p {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .buttons {
+                justify-content: center;
+            }
+
+            .skills-container,
+            .projects-container {
+                grid-template-columns: 1fr 1fr;
+            }
+
+        }
+
+        @media (max-width: 650px) {
+
+            nav {
+                padding: 15px 5%;
+            }
+
+            nav ul {
+                display: none;
+            }
+
+            section {
+                padding: 80px 5%;
+            }
+
+            .about-container,
+            .skills-container,
+            .projects-container {
                 grid-template-columns: 1fr;
             }
 
-            header {
-                flex-direction: column;
-                gap: 15px;
+            .profile-card {
+                width: 100%;
             }
 
-            nav a {
-                margin: 0 8px;
-            }
-
-            .hero h1 {
-                font-size: 32px;
-            }
         }
 
     </style>
@@ -235,84 +469,132 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 <body>
 
-<header>
-
-    <div class="logo">
-        Mon Application
-    </div>
+    <!-- =========================
+         NAVBAR
+    ========================== -->
 
     <nav>
-        <a href="index.php">Accueil</a>
-        <a href="#photos">Photos</a>
-        <a href="#contact">Contact</a>
-        <a href="api.php">API</a>
+
+        <a href="/" class="logo">
+            Oumaima<span>.</span>
+        </a>
+
+        <ul>
+            <li><a href="#accueil">Accueil</a></li>
+            <li><a href="#about">À propos</a></li>
+            <li><a href="#skills">Compétences</a></li>
+            <li><a href="#projects">Projets</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+
     </nav>
 
-</header>
 
+    <!-- =========================
+         HERO
+    ========================== -->
 
-<section class="hero">
+    <section class="hero" id="accueil">
 
-    <h1><?= $titre ?></h1>
+        <div class="hero-content">
 
-    <p><?= $message ?></p>
+            <div class="small-title">
+                Portfolio professionnel
+            </div>
 
-</section>
+            <h1>
+                Bonjour, je suis
+                <span>Oumaima.</span>
+            </h1>
 
+            <p>
+                Étudiante en Développement Digital, passionnée par
+                la création de solutions web modernes, élégantes
+                et fonctionnelles.
+            </p>
 
-<div class="container">
+            <div class="buttons">
 
-    <!-- STATISTIQUES -->
+                <a href="#projects" class="btn btn-primary">
+                    Découvrir mes projets
+                </a>
 
-    <div class="stats">
+                <a href="#contact" class="btn btn-secondary">
+                    Me contacter
+                </a>
 
-        <div class="stat">
-            <strong><?= $_SESSION['visites'] ?></strong>
-            Visites
+            </div>
+
         </div>
 
-        <div class="stat">
-            <strong><?= $date ?></strong>
-            Date
+
+        <div class="profile-card">
+
+            <div class="profile-circle">
+                OE
+            </div>
+
+            <h3>Oumaima Elharti</h3>
+
+            <p>
+                Développement Digital
+            </p>
+
+            <p>
+                2ème année
+            </p>
+
         </div>
 
-        <div class="stat">
-            <strong><?= $heure ?></strong>
-            Heure
+    </section>
+
+
+    <!-- =========================
+         ABOUT
+    ========================== -->
+
+    <section class="about" id="about">
+
+        <div class="section-title">
+
+            <span>À propos</span>
+
+            <h2>Mon parcours</h2>
+
+            <p>
+                Un espace dédié à mon évolution et aux compétences
+                développées durant ma formation.
+            </p>
+
         </div>
 
-    </div>
 
+        <div class="about-container">
 
-    <!-- PHOTOS -->
+            <div class="about-box">
 
-    <section id="photos">
-
-        <div class="photos">
-
-            <div class="card">
-
-                <img src="../public/images/PH3.jpeg"
-                     alt="Photo PH3">
-
-                <h2>Photo 1</h2>
+                <h3>Qui suis-je ?</h3>
 
                 <p>
-                    Première image de mon application.
+                    Je suis Oumaima Elharti, étudiante en deuxième
+                    année de Développement Digital à l'ISTA.
+                    À travers ma formation, je développe progressivement
+                    mes compétences en programmation, développement web
+                    et gestion de bases de données.
                 </p>
 
             </div>
 
 
-            <div class="card">
+            <div class="about-box">
 
-                <img src="../public/images/PH7.jpeg"
-                     alt="Photo PH7">
-
-                <h2>Photo 2</h2>
+                <h3>Mon objectif</h3>
 
                 <p>
-                    Deuxième image de mon application.
+                    Construire une expérience solide dans le développement
+                    web et créer des projets utiles, modernes et bien
+                    structurés tout en continuant à améliorer mes
+                    compétences techniques.
                 </p>
 
             </div>
@@ -322,72 +604,240 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     </section>
 
 
-    <!-- FORMULAIRE -->
+    <!-- =========================
+         SKILLS
+    ========================== -->
 
-    <section id="contact">
+    <section class="skills" id="skills">
 
-        <form method="POST" action="index.php">
+        <div class="section-title">
 
-            <h2>Contactez-nous</h2>
+            <span>Compétences</span>
 
-            <br>
+            <h2>Ce que j'apprends</h2>
 
-            <?php if ($_SERVER["REQUEST_METHOD"] === "POST"): ?>
+            <p>
+                Les technologies et domaines étudiés durant ma formation.
+            </p>
 
-                <div class="success">
-                    Merci <?= $nom ?> ! Votre formulaire a été envoyé.
+        </div>
+
+
+        <div class="skills-container">
+
+            <div class="skill-card">
+
+                <div class="icon">🌐</div>
+
+                <h3>HTML & CSS</h3>
+
+                <p>
+                    Création de pages web structurées,
+                    responsives et modernes.
+                </p>
+
+            </div>
+
+
+            <div class="skill-card">
+
+                <div class="icon">⚡</div>
+
+                <h3>JavaScript</h3>
+
+                <p>
+                    Dynamisation des interfaces et manipulation
+                    du DOM.
+                </p>
+
+            </div>
+
+
+            <div class="skill-card">
+
+                <div class="icon">💻</div>
+
+                <h3>PHP</h3>
+
+                <p>
+                    Développement côté serveur et création
+                    d'applications web dynamiques.
+                </p>
+
+            </div>
+
+
+            <div class="skill-card">
+
+                <div class="icon">🗄️</div>
+
+                <h3>MySQL / PDO</h3>
+
+                <p>
+                    Gestion des bases de données et connexion
+                    avec PHP.
+                </p>
+
+            </div>
+
+
+            <div class="skill-card">
+
+                <div class="icon">✨</div>
+
+                <h3>jQuery</h3>
+
+                <p>
+                    Manipulation simplifiée du DOM et interactions
+                    dynamiques.
+                </p>
+
+            </div>
+
+
+            <div class="skill-card">
+
+                <div class="icon">🔗</div>
+
+                <h3>Git & GitHub</h3>
+
+                <p>
+                    Gestion des versions et organisation
+                    de mes projets.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         PROJECTS
+    ========================== -->
+
+    <section class="projects" id="projects">
+
+        <div class="section-title">
+
+            <span>Mon travail</span>
+
+            <h2>Projets & Travaux</h2>
+
+            <p>
+                Retrouvez ici mes TP, TD, exercices et projets réalisés
+                durant ma formation.
+            </p>
+
+        </div>
+
+
+        <div class="projects-container">
+
+            <div class="project-card">
+
+                <div class="project-number">
+                    01 — M201
                 </div>
 
-            <?php endif; ?>
+                <h3>Préparation d'un projet web</h3>
+
+                <p>
+                    Exercices et travaux pratiques réalisés
+                    
+                </p>
+
+                <a href="#" class="project-link">
+                    Voir le travail →
+                </a>
+
+            </div>
 
 
-            <label>Nom</label>
+            <div class="project-card">
 
-            <input
-                type="text"
-                name="nom"
-                placeholder="Votre nom"
-                required
-            >
+                <div class="project-number">
+                    02 — M202
+                </div>
 
+                <h3>Approche agile</h3>
 
-            <label>Email</label>
+                <p>
+                    Exercices de manipulation du DOM,
+                    événements et validation.
+                </p>
 
-            <input
-                type="email"
-                name="email"
-                placeholder="Votre email"
-                required
-            >
+                <a href="#" class="project-link">
+                    Voir le travail →
+                </a>
 
-
-            <label>Message</label>
-
-            <textarea
-                name="message"
-                placeholder="Votre message"
-                required
-            ></textarea>
+            </div>
 
 
-            <button type="submit">
-                Envoyer
-            </button>
+            <div class="project-card">
 
-        </form>
+                <div class="project-number">
+                    03 — M203
+                </div>
+
+                <h3>Gestion des données</h3>
+
+                <p>
+                  Gestion des données des application
+                </p>
+
+                <a href="#" class="project-link">
+                    Voir le travail →
+                </a>
+
+            </div>
+
+        </div>
 
     </section>
 
-</div>
+
+    <!-- =========================
+         CONTACT
+    ========================== -->
+
+    <section class="contact" id="contact">
+
+        <div class="contact-content">
+
+            <h2>Travaillons ensemble</h2>
+
+            <p>
+                Vous souhaitez découvrir mon parcours,
+                mes travaux ou échanger avec moi ?
+            </p>
+
+            <a href="mailto:tonemail@example.com"
+               class="btn btn-primary">
+
+                Me contacter
+
+            </a>
+
+        </div>
+
+    </section>
 
 
-<footer>
+    <!-- =========================
+         FOOTER
+    ========================== -->
 
-    <p>
-        © <?= date("Y") ?> - Mon Application PHP
-    </p>
+    <footer>
 
-</footer>
+        <p>
+            © 2026 <span>Oumaima Elharti</span> —
+            Portfolio professionnel
+        </p>
+
+    </footer>
 
 </body>
+
 </html>

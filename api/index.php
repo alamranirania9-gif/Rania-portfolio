@@ -40,14 +40,11 @@ final class Config
 final class Gallery
 {
     public function __construct()
-    {
-        if (!is_dir(Config::UPLOAD_DIR)) {
-            mkdir(Config::UPLOAD_DIR, 0755, true);
-        }
-        if (!is_dir(Config::THUMB_DIR)) {
-            mkdir(Config::THUMB_DIR, 0755, true);
-        }
+    
     }
+    if (!is_dir(Config::UPLOAD_DIR) && !@mkdir(Config::UPLOAD_DIR, 0755, true) && !is_dir(Config::UPLOAD_DIR)) {
+    throw new RuntimeException("Le dossier d'upload n'est pas accessible en écriture sur cet hébergement.");
+}
 
     /** Retourne la liste des photos, les plus récentes en premier. */
     public function list(): array
@@ -67,6 +64,22 @@ final class Gallery
             ];
         }, $files);
     }
+  
+   $photosDeBase = [
+    ['url' => 'PH7.jpeg', 'thumb' => 'PH7.jpeg'],
+    ['url' => 'PH3.jpeg', 'thumb' => 'PH3.jpeg'],
+    ];
+
+       <div class="gallery-grid" id="gallery-grid">
+    <?php foreach ($photosDeBase as $p): ?>
+        <div class="gallery-item" data-full="<?= htmlspecialchars($p['url']) ?>">
+            <img src="<?= htmlspecialchars($p['thumb']) ?>" alt="Photo du portfolio" loading="lazy">
+        </div>
+    <?php endforeach; ?>
+    <?php foreach ($photos as $p): ?>
+        <!-- ... boucle existante des photos uploadées ... -->
+    <?php endforeach; ?>
+</div>
 
     /**
      * Valide et enregistre un fichier envoyé via $_FILES.

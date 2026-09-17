@@ -3,9 +3,7 @@
 $uploadDir = 'uploads/';
 
 // Create the directory if it doesn't exist
-if (!is_dir($uploadDir)) {
-    mkdir($uploadDir, 0755, true);
-}
+if (!is_dir($uploadDir)) { mkdir($uploadDir, 0755, true);}
 
 $message = '';
 

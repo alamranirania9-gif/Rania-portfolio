@@ -40,17 +40,16 @@ final class Config
 final class Gallery
 {
     public function __construct()
-    {
-        if (!is_dir(Config::UPLOAD_DIR) && !mkdir(Config::UPLOAD_DIR, 0755, true) && !is_dir(Config::UPLOAD_DIR)) {
-            throw new RuntimeException('Impossible de créer le dossier uploads.');
-        }
-
-        if (!is_dir(Config::THUMB_DIR) && !mkdir(Config::THUMB_DIR, 0755, true) && !is_dir(Config::THUMB_DIR)) {
-            throw new RuntimeException('Impossible de créer le dossier des miniatures.');
-        }
+      throw new RuntimeException('Impossible de créer le dossier uploads.');
     }
 
-
+    if (
+        !is_dir(Config::THUMB_DIR)
+        && !mkdir(Config::THUMB_DIR, 0755, true)
+        && !is_dir(Config::THUMB_DIR)
+    ) {
+        throw new RuntimeException('Impossible de créer le dossier des miniatures.');
+    }
 
 
     /** Retourne la liste des photos, les plus récentes en premier. */
@@ -71,6 +70,7 @@ final class Gallery
             ];
         }, $files);
     }
+
     /**
      * Valide et enregistre un fichier envoyé via $_FILES.
      * @throws RuntimeException si la validation échoue.
@@ -79,10 +79,6 @@ final class Gallery
     {
         if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
             throw new RuntimeException("Échec de l'envoi (code {$file['error']}).");
-        }
-
-        if (!isset($file['tmp_name'], $file['size']) || !is_uploaded_file($file['tmp_name'])) {
-            throw new RuntimeException('Fichier envoyé invalide.');
         }
 
         if ($file['size'] > Config::MAX_SIZE) {
@@ -107,11 +103,7 @@ final class Gallery
 
         $this->makeThumbnail($dest, Config::THUMB_DIR . $filename, $mime);
 
-        return [
-            'name'  => $filename,
-            'url'   => Config::UPLOAD_URL . rawurlencode($filename),
-            'thumb' => Config::THUMB_URL . rawurlencode($filename),
-        ];
+        return ['name' => $filename, 'url' => Config::UPLOAD_URL . $filename];
     }
 
     /** Supprime une photo (et sa miniature) par nom de fichier. */
@@ -230,13 +222,7 @@ if (isset($_GET['action'])) {
 // RENDU DE LA PAGE
 // =========================================================
 $photos = $gallery->list();
-
-$photosDeBase = [
-    ['url' => 'PH7.jpeg', 'thumb' => 'PH7.jpeg'],
-    ['url' => 'PH3.jpeg', 'thumb' => 'PH3.jpeg'],
-];
-
-$csrf = htmlspecialchars($_SESSION['csrf'], ENT_QUOTES);
+$csrf   = htmlspecialchars($_SESSION['csrf'], ENT_QUOTES);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -386,23 +372,15 @@ a { text-decoration: none; }
     </div>
 
     <div class="gallery-grid" id="gallery-grid">
-        <?php foreach ($photosDeBase as $p): ?>
-            <div class="gallery-item" data-full="<?= htmlspecialchars($p['url'], ENT_QUOTES, 'UTF-8') ?>">
-                <img src="<?= htmlspecialchars($p['thumb'], ENT_QUOTES, 'UTF-8') ?>" alt="Photo du portfolio" loading="lazy">
-            </div>
-        <?php endforeach; ?>
-
         <?php foreach ($photos as $p): ?>
-            <div class="gallery-item"
-                 data-name="<?= htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8') ?>"
-                 data-full="<?= htmlspecialchars($p['url'], ENT_QUOTES, 'UTF-8') ?>">
-                <img src="<?= htmlspecialchars($p['thumb'], ENT_QUOTES, 'UTF-8') ?>" alt="Photo du portfolio" loading="lazy">
+            <div class="gallery-item" data-name="<?= htmlspecialchars($p['name']) ?>" data-full="<?= htmlspecialchars($p['url']) ?>">
+                <img src="<?= htmlspecialchars($p['thumb']) ?>" alt="Photo du portfolio" loading="lazy">
                 <button class="delete-btn" title="Supprimer" aria-label="Supprimer cette photo">&times;</button>
             </div>
         <?php endforeach; ?>
     </div>
 
-    <div class="empty-state" id="empty-state" style="<?= ($photos || $photosDeBase) ? 'display:none' : '' ?>">
+    <div class="empty-state" id="empty-state" style="<?= $photos ? 'display:none' : '' ?>">
         <p>Aucune photo pour le moment. Ajoutez-en une ci-dessous.</p>
     </div>
 </section>
@@ -471,14 +449,14 @@ a { text-decoration: none; }
         setTimeout(() => messageBox.classList.remove('show'), 4000);
     }
 
-    function addGalleryItem(name, url, thumb = url) {
+    function addGalleryItem(name, url) {
         emptyState.style.display = 'none';
         const div = document.createElement('div');
         div.className = 'gallery-item';
         div.dataset.name = name;
         div.dataset.full = url;
         div.innerHTML = `
-            <img src="${thumb}" alt="Photo du portfolio" loading="lazy">
+            <img src="${url}" alt="Photo du portfolio" loading="lazy">
             <button class="delete-btn" title="Supprimer" aria-label="Supprimer cette photo">&times;</button>
         `;
         grid.prepend(div);
@@ -538,13 +516,10 @@ a { text-decoration: none; }
         el.querySelector('img').addEventListener('click', () => {
             openLightbox(items().indexOf(el));
         });
-        const deleteBtn = el.querySelector('.delete-btn');
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                deletePhoto(el.dataset.name, el);
-            });
-        }
+        el.querySelector('.delete-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deletePhoto(el.dataset.name, el);
+        });
     }
 
     items().forEach(bindItem);
@@ -598,7 +573,7 @@ a { text-decoration: none; }
 
             if (data.ok) {
                 showMessage('Photo ajoutée avec succès.', 'success');
-                addGalleryItem(data.photo.name, data.photo.url, data.photo.thumb || data.photo.url);
+                addGalleryItem(data.photo.name, data.photo.url);
                 form.reset();
                 uploadText.textContent = 'Choisissez une photo ou glissez-la ici';
                 dropzone.classList.remove('has-file');

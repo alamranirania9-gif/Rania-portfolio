@@ -1,11 +1,5 @@
 <?php
 // Directory where uploaded images will be saved
-$uploadDir = 'uploads/';
-
-// Create the directory if it doesn't exist
-if (!is_dir($uploadDir)) { mkdir($uploadDir, 0755, true);}
-
-$message = '';
 
 // Handle Image Upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['photo'])) {

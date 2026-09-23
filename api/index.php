@@ -22,17 +22,20 @@ $projects = [
     [
         "title" => "Portfolio Web",
         "description" => "Création d'un portfolio personnel moderne et responsive.",
-        "tech" => "HTML • CSS • JavaScript • PHP"
+        "tech" => "HTML • CSS • JavaScript • PHP",
+        "image" => "images/PH7.jpeg"
     ],
     [
         "title" => "Application CRUD",
         "description" => "Application de gestion permettant d'ajouter, modifier, supprimer et afficher des données.",
-        "tech" => "PHP • MySQL • Bootstrap"
+        "tech" => "PHP • MySQL • Bootstrap",
+        "image" => "images/PH3.jpeg"
     ],
     [
         "title" => "UI / UX Design",
         "description" => "Conception d'interfaces modernes et intuitives avec Figma.",
-        "tech" => "Figma • UI • UX"
+        "tech" => "Figma • UI • UX",
+        "image" => "figma/atelier 1/at1.jpeg"
     ]
 ];
 
@@ -226,6 +229,14 @@ $projects = [
             box-shadow:
                 0 0 30px rgba(139, 92, 246, 0.25),
                 0 0 80px rgba(139, 92, 246, 0.12);
+            overflow: hidden;
+        }
+
+        .profile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
         }
 
         /* =========================
@@ -301,8 +312,8 @@ $projects = [
         .project {
             background: #111111;
             border: 1px solid #262626;
-            padding: 30px;
             border-radius: 15px;
+            overflow: hidden;
             transition: 0.3s;
         }
 
@@ -310,6 +321,17 @@ $projects = [
             transform: translateY(-8px);
             border-color: #8b5cf6;
             box-shadow: 0 0 30px rgba(139, 92, 246, 0.18);
+        }
+
+        .project img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .project-body {
+            padding: 30px;
         }
 
         .project h3 {
@@ -487,7 +509,7 @@ $projects = [
     </div>
 
     <div class="profile">
-        RA
+        <img src="images/PH3.jpeg" alt="Photo de <?= $name ?>">
     </div>
 
 </section>
@@ -539,9 +561,12 @@ $projects = [
     <div class="projects">
         <?php foreach ($projects as $project): ?>
             <div class="project">
-                <h3><?= $project["title"] ?></h3>
-                <p><?= $project["description"] ?></p>
-                <div class="tech"><?= $project["tech"] ?></div>
+                <img src="<?= $project["image"] ?>" alt="<?= $project["title"] ?>">
+                <div class="project-body">
+                    <h3><?= $project["title"] ?></h3>
+                    <p><?= $project["description"] ?></p>
+                    <div class="tech"><?= $project["tech"] ?></div>
+                </div>
             </div>
         <?php endforeach; ?>
     </div>

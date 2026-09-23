@@ -509,7 +509,7 @@ $projects = [
     </div>
 
     <div class="profile">
-        <img src="images/PH3.jpeg" alt="Photo de <?= $name ?>">
+        RA
     </div>
 
 </section>

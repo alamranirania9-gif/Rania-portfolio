@@ -1,10 +1,14 @@
 <?php
 
-$name = "Rania Al Amrani";
-$job = "Développeuse Web";
+/* =========================
+   DONNÉES
+========================= */
 
-$about = "Je suis étudiante en Développement Digital à l'OFPPT. 
-Je m'intéresse au développement web, à la programmation, 
+$name = "Rania Al Amrani";
+$job  = "Développeuse Web";
+
+$about = "Je suis étudiante en Développement Digital à l'OFPPT.
+Je m'intéresse au développement web, à la programmation,
 aux bases de données et au design UI/UX.";
 
 $skills = [
@@ -18,26 +22,68 @@ $skills = [
     "UI / UX Design"
 ];
 
-$projects = [
+/*
+ * Dossiers des modules (mêmes noms que dans l'explorateur).
+ * Ils doivent se trouver dans le dossier "public" pour être visibles sur Vercel.
+ */
+$modules = [
     [
-        "title" => "Portfolio Web",
-        "description" => "Création d'un portfolio personnel moderne et responsive.",
-        "tech" => "HTML • CSS • JavaScript • PHP",
-        "image" => "images/PH7.jpeg"
+        "title"       => "Module 1",
+        "description" => "Ateliers pratiques du premier module.",
+        "ateliers"    => [
+            ["title" => "Atelier 1", "folder" => "module 1/atelier 1"],
+            ["title" => "Atelier 2", "folder" => "module 1/atelier2"],
+            ["title" => "Atelier 3", "folder" => "module 1/atelier3"]
+        ]
     ],
     [
-        "title" => "Application CRUD",
-        "description" => "Application de gestion permettant d'ajouter, modifier, supprimer et afficher des données.",
-        "tech" => "PHP • MySQL • Bootstrap",
-        "image" => "images/PH3.jpeg"
-    ],
-    [
-        "title" => "UI / UX Design",
-        "description" => "Conception d'interfaces modernes et intuitives avec Figma.",
-        "tech" => "Figma • UI • UX",
-        "image" => "figma/atelier 1/at1.jpeg"
+        "title"       => "Module 2",
+        "description" => "Ateliers pratiques du deuxième module.",
+        "ateliers"    => [
+            ["title" => "Atelier 1", "folder" => "module2/atelierse1"]
+        ]
     ]
 ];
+
+/* =========================
+   FONCTIONS
+========================= */
+
+// Échappe le texte avant de l'afficher
+function e($text)
+{
+    return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+}
+
+// Dossier public sur le disque
+function publicDir()
+{
+    return dirname(__DIR__) . '/public';
+}
+
+// Transforme "module 1/atelier 1/at1.jpeg" en URL valide (espaces encodés)
+function webPath($path)
+{
+    return '/' . implode('/', array_map('rawurlencode', explode('/', $path)));
+}
+
+// Liste les fichiers d'un dossier selon leurs extensions
+function filesIn($folder, array $extensions)
+{
+    $dir = publicDir() . '/' . $folder;
+    if (!is_dir($dir)) {
+        return [];
+    }
+
+    $result = [];
+    foreach (scandir($dir) as $file) {
+        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        if (in_array($ext, $extensions, true)) {
+            $result[] = $folder . '/' . $file;
+        }
+    }
+    return $result;
+}
 
 ?>
 <!DOCTYPE html>
@@ -46,24 +92,21 @@ $projects = [
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $name ?> | Portfolio</title>
+    <title><?= e($name) ?> | Portfolio</title>
 
     <style>
 
-        /* =========================
-           RESET
-        ========================= */
+        /* RESET */
+
+        html {
+            scroll-behavior: smooth;
+        }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            scroll-behavior: smooth;
         }
-
-        /* =========================
-           BODY
-        ========================= */
 
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -71,9 +114,7 @@ $projects = [
             color: #ffffff;
         }
 
-        /* =========================
-           HEADER
-        ========================= */
+        /* HEADER */
 
         header {
             position: fixed;
@@ -95,8 +136,6 @@ $projects = [
             position: relative;
         }
 
-        /* LOGO */
-
         .logo {
             font-size: 28px;
             font-weight: bold;
@@ -106,8 +145,6 @@ $projects = [
         .logo span {
             color: white;
         }
-
-        /* MENU */
 
         nav ul {
             display: flex;
@@ -126,8 +163,6 @@ $projects = [
             color: #a855f7;
         }
 
-        /* BURGER (mobile) */
-
         .burger {
             display: none;
             font-size: 26px;
@@ -135,18 +170,14 @@ $projects = [
             color: white;
         }
 
-        /* =========================
-           SECTIONS
-        ========================= */
+        /* SECTIONS */
 
         section {
             min-height: 100vh;
             padding: 120px 8% 70px;
         }
 
-        /* =========================
-           HOME
-        ========================= */
+        /* HOME */
 
         .home {
             display: flex;
@@ -187,9 +218,7 @@ $projects = [
             font-size: 17px;
         }
 
-        /* =========================
-           BUTTON
-        ========================= */
+        /* BOUTON */
 
         .btn {
             display: inline-block;
@@ -210,9 +239,7 @@ $projects = [
             box-shadow: 0 0 30px rgba(168, 85, 247, 0.45);
         }
 
-        /* =========================
-           PROFILE
-        ========================= */
+        /* PROFIL */
 
         .profile {
             width: 280px;
@@ -239,9 +266,7 @@ $projects = [
             border-radius: 50%;
         }
 
-        /* =========================
-           TITLES
-        ========================= */
+        /* TITRES */
 
         .title {
             text-align: center;
@@ -253,9 +278,7 @@ $projects = [
             color: #a855f7;
         }
 
-        /* =========================
-           ABOUT
-        ========================= */
+        /* À PROPOS */
 
         .about {
             max-width: 850px;
@@ -269,9 +292,7 @@ $projects = [
             font-size: 18px;
         }
 
-        /* =========================
-           SKILLS
-        ========================= */
+        /* COMPÉTENCES */
 
         .skills {
             max-width: 1100px;
@@ -288,7 +309,6 @@ $projects = [
             text-align: center;
             border-radius: 12px;
             transition: 0.3s;
-            color: #ffffff;
         }
 
         .skill:hover {
@@ -297,19 +317,34 @@ $projects = [
             box-shadow: 0 0 25px rgba(139, 92, 246, 0.18);
         }
 
-        /* =========================
-           PROJECTS
-        ========================= */
+        /* MODULES */
 
-        .projects {
+        .modules {
             max-width: 1100px;
             margin: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 50px;
+        }
+
+        .module h3 {
+            color: #a855f7;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .module > p {
+            color: #c4c4c4;
+            margin-bottom: 25px;
+        }
+
+        .ateliers {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 25px;
         }
 
-        .project {
+        .atelier {
             background: #111111;
             border: 1px solid #262626;
             border-radius: 15px;
@@ -317,44 +352,59 @@ $projects = [
             transition: 0.3s;
         }
 
-        .project:hover {
+        .atelier:hover {
             transform: translateY(-8px);
             border-color: #8b5cf6;
             box-shadow: 0 0 30px rgba(139, 92, 246, 0.18);
         }
 
-        .project img {
+        .atelier-photos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 2px;
+            background: #262626;
+        }
+
+        .atelier-photos img {
             width: 100%;
             height: 180px;
             object-fit: cover;
             display: block;
         }
 
-        .project-body {
-            padding: 30px;
+        .no-photo {
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #777;
+            font-size: 14px;
         }
 
-        .project h3 {
+        .atelier-body {
+            padding: 25px;
+        }
+
+        .atelier-body h4 {
             color: #a855f7;
-            margin-bottom: 18px;
-            font-size: 22px;
+            font-size: 20px;
+            margin-bottom: 15px;
         }
 
-        .project p {
-            color: #c4c4c4;
-            line-height: 1.7;
-            margin-bottom: 20px;
-        }
-
-        .tech {
+        .atelier-body a {
+            display: block;
             color: #8b5cf6;
             font-size: 14px;
             font-weight: bold;
+            text-decoration: none;
+            margin-top: 8px;
         }
 
-        /* =========================
-           CONTACT
-        ========================= */
+        .atelier-body a:hover {
+            color: #a855f7;
+        }
+
+        /* CONTACT */
 
         .contact {
             text-align: center;
@@ -370,9 +420,7 @@ $projects = [
             color: #a855f7;
         }
 
-        /* =========================
-           FOOTER
-        ========================= */
+        /* FOOTER */
 
         footer {
             text-align: center;
@@ -382,9 +430,7 @@ $projects = [
             color: #777;
         }
 
-        /* =========================
-           RESPONSIVE
-        ========================= */
+        /* RESPONSIVE */
 
         @media (max-width: 900px) {
 
@@ -423,7 +469,7 @@ $projects = [
                 grid-template-columns: repeat(2, 1fr);
             }
 
-            .projects {
+            .ateliers {
                 grid-template-columns: 1fr;
             }
 
@@ -459,9 +505,7 @@ $projects = [
 </head>
 <body>
 
-<!-- =========================
-     HEADER
-========================= -->
+<!-- HEADER -->
 
 <header>
     <nav>
@@ -474,7 +518,7 @@ $projects = [
             <li><a href="#home">Accueil</a></li>
             <li><a href="#about">À propos</a></li>
             <li><a href="#skills">Compétences</a></li>
-            <li><a href="#projects">Projets</a></li>
+            <li><a href="#modules">Modules</a></li>
             <li><a href="#contact">Contact</a></li>
         </ul>
 
@@ -485,9 +529,7 @@ $projects = [
     </nav>
 </header>
 
-<!-- =========================
-     HOME
-========================= -->
+<!-- ACCUEIL -->
 
 <section class="home" id="home">
 
@@ -497,14 +539,14 @@ $projects = [
 
         <h1>Rania <span>Al Amrani</span></h1>
 
-        <h2 class="job"><?= $job ?></h2>
+        <h2 class="job"><?= e($job) ?></h2>
 
         <p>
             Développeuse web passionnée par la création
             d'interfaces modernes et d'applications fonctionnelles.
         </p>
 
-        <a href="#projects" class="btn">Voir mes projets</a>
+        <a href="#modules" class="btn">Voir mes modules</a>
 
     </div>
 
@@ -514,9 +556,7 @@ $projects = [
 
 </section>
 
-<!-- =========================
-     ABOUT
-========================= -->
+<!-- À PROPOS -->
 
 <section id="about">
 
@@ -524,7 +564,7 @@ $projects = [
 
     <div class="about">
         <p>
-            <?= $about ?>
+            <?= e($about) ?>
             Je suis motivée, curieuse et passionnée
             par la création de solutions numériques.
             Mon objectif est de développer mes compétences
@@ -534,9 +574,7 @@ $projects = [
 
 </section>
 
-<!-- =========================
-     SKILLS
-========================= -->
+<!-- COMPÉTENCES -->
 
 <section id="skills">
 
@@ -544,38 +582,66 @@ $projects = [
 
     <div class="skills">
         <?php foreach ($skills as $skill): ?>
-            <div class="skill"><?= $skill ?></div>
+            <div class="skill"><?= e($skill) ?></div>
         <?php endforeach; ?>
     </div>
 
 </section>
 
-<!-- =========================
-     PROJECTS
-========================= -->
+<!-- MODULES -->
 
-<section id="projects">
+<section id="modules">
 
-    <h2 class="title">Mes <span>projets</span></h2>
+    <h2 class="title">Mes <span>modules</span></h2>
 
-    <div class="projects">
-        <?php foreach ($projects as $project): ?>
-            <div class="project">
-                <img src="<?= $project["image"] ?>" alt="<?= $project["title"] ?>">
-                <div class="project-body">
-                    <h3><?= $project["title"] ?></h3>
-                    <p><?= $project["description"] ?></p>
-                    <div class="tech"><?= $project["tech"] ?></div>
+    <div class="modules">
+        <?php foreach ($modules as $module): ?>
+            <div class="module">
+
+                <h3><?= e($module["title"]) ?></h3>
+                <p><?= e($module["description"]) ?></p>
+
+                <div class="ateliers">
+                    <?php foreach ($module["ateliers"] as $atelier): ?>
+                        <?php
+                            $photos = filesIn($atelier["folder"], ["jpg", "jpeg", "png", "webp", "gif"]);
+                            $pdfs   = filesIn($atelier["folder"], ["pdf"]);
+                        ?>
+                        <div class="atelier">
+
+                            <?php if ($photos): ?>
+                                <div class="atelier-photos">
+                                    <?php foreach ($photos as $photo): ?>
+                                        <img src="<?= e(webPath($photo)) ?>"
+                                             alt="<?= e($atelier["title"]) ?>"
+                                             loading="lazy">
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="no-photo">Aucune photo pour le moment</div>
+                            <?php endif; ?>
+
+                            <div class="atelier-body">
+                                <h4><?= e($atelier["title"]) ?></h4>
+
+                                <?php foreach ($pdfs as $pdf): ?>
+                                    <a href="<?= e(webPath($pdf)) ?>" target="_blank" rel="noopener">
+                                        📄 <?= e(basename($pdf)) ?>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+
+                        </div>
+                    <?php endforeach; ?>
                 </div>
+
             </div>
         <?php endforeach; ?>
     </div>
 
 </section>
 
-<!-- =========================
-     CONTACT
-========================= -->
+<!-- CONTACT -->
 
 <section class="contact" id="contact">
 
@@ -593,13 +659,20 @@ $projects = [
 
 </section>
 
-<!-- =========================
-     FOOTER
-========================= -->
+<!-- FOOTER -->
 
 <footer>
-    © <?= date("Y") ?> <?= $name ?> — Portfolio
+    © <?= date("Y") ?> <?= e($name) ?> — Portfolio
 </footer>
+
+<script>
+    // Ferme le menu mobile après un clic sur un lien
+    document.querySelectorAll('#navMenu a').forEach(function (link) {
+        link.addEventListener('click', function () {
+            document.getElementById('navMenu').classList.remove('active');
+        });
+    });
+</script>
 
 </body>
 </html>

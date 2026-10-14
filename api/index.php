@@ -23,28 +23,17 @@ $skills = [
 ];
 
 /*
-<<<<<<< HEAD
- * Dossiers des modules (mêmes noms que dans l'explorateur).
- * Ils doivent se trouver dans le dossier "public" pour être visibles sur Vercel.
-=======
  * MODULES > ATELIERS > photos / vidéos / fichiers / ressources
  *
  * - Les dossiers doivent se trouver dans "public/" pour être visibles sur Vercel.
  * - "photos", "videos", "fichiers" : chemins listés à la main (optionnel).
  *   Le code ajoute AUSSI automatiquement tout ce qui est trouvé dans le dossier.
  * - "ressources" : liens externes (cours, GitHub, Figma, YouTube...).
->>>>>>> f6b9632 ( finally code)
  */
 $modules = [
     [
         "title"       => "Module 1",
         "description" => "Ateliers pratiques du premier module.",
-<<<<<<< HEAD
-        "ateliers"    => [
-            ["title" => "Atelier 1", "folder" => "module 1/atelier 1"],
-            ["title" => "Atelier 2", "folder" => "module 1/atelier2"],
-            ["title" => "Atelier 3", "folder" => "module 1/atelier3"]
-=======
         "ressources"  => [
             // ["label" => "Cours du module 1", "url" => "https://..."]
         ],
@@ -84,16 +73,11 @@ $modules = [
                 "fichiers"   => [],
                 "ressources" => []
             ]
->>>>>>> f6b9632 ( finally code)
         ]
     ],
     [
         "title"       => "Module 2",
         "description" => "Ateliers pratiques du deuxième module.",
-<<<<<<< HEAD
-        "ateliers"    => [
-            ["title" => "Atelier 1", "folder" => "module2/atelierse1"]
-=======
         "ressources"  => [],
         "ateliers"    => [
             [
@@ -106,19 +90,15 @@ $modules = [
                 "fichiers"   => [],
                 "ressources" => []
             ]
->>>>>>> f6b9632 ( finally code)
         ]
     ]
 ];
 
-<<<<<<< HEAD
-=======
 /* Extensions reconnues */
 $EXT_PHOTOS  = ["jpg", "jpeg", "png", "webp", "gif"];
 $EXT_VIDEOS  = ["mp4", "webm", "ogg", "mov"];
 $EXT_FILES   = ["pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "zip", "rar", "txt", "sql", "fig"];
 
->>>>>>> f6b9632 ( finally code)
 /* =========================
    FONCTIONS
 ========================= */
@@ -126,17 +106,27 @@ $EXT_FILES   = ["pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "zip", "rar"
 // Échappe le texte avant de l'afficher
 function e($text)
 {
-<<<<<<< HEAD
-    return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-=======
     return htmlspecialchars((string) $text, ENT_QUOTES, 'UTF-8');
->>>>>>> f6b9632 ( finally code)
 }
 
-// Dossier public sur le disque
+// Dossier public sur le disque (essaie plusieurs emplacements possibles)
 function publicDir()
 {
-    return dirname(__DIR__) . '/public';
+    static $dir = null;
+    if ($dir !== null) {
+        return $dir;
+    }
+
+    $candidates = [
+        dirname(__DIR__) . '/public',
+        getcwd() . '/public',
+    ];
+    foreach ($candidates as $candidate) {
+        if (is_dir($candidate)) {
+            return $dir = $candidate;
+        }
+    }
+    return $dir = $candidates[0];
 }
 
 // Transforme "module 1/atelier 1/at1.jpeg" en URL valide (espaces encodés)
@@ -160,14 +150,20 @@ function filesIn($folder, array $extensions)
             $result[] = $folder . '/' . $file;
         }
     }
+    sort($result, SORT_NATURAL | SORT_FLAG_CASE);
     return $result;
 }
 
-<<<<<<< HEAD
-=======
 // Fusionne la liste écrite à la main et celle trouvée dans le dossier (sans doublons)
 function collect(array $manual, $folder, array $extensions)
 {
+    // Si le dossier est lisible, on ignore les chemins écrits à la main qui n'existent pas
+    // (évite les images cassées en cas de faute de frappe ou de majuscule différente).
+    if (is_dir(publicDir() . '/' . $folder)) {
+        $manual = array_filter($manual, function ($path) {
+            return is_file(publicDir() . '/' . $path);
+        });
+    }
     return array_values(array_unique(array_merge($manual, filesIn($folder, $extensions))));
 }
 
@@ -191,7 +187,6 @@ function fileIcon($path)
     return $icons[$ext] ?? "📎";
 }
 
->>>>>>> f6b9632 ( finally code)
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -449,10 +444,7 @@ function fileIcon($path)
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 25px;
-<<<<<<< HEAD
-=======
             align-items: start;
->>>>>>> f6b9632 ( finally code)
         }
 
         .atelier {
@@ -483,8 +475,6 @@ function fileIcon($path)
             display: block;
         }
 
-<<<<<<< HEAD
-=======
         .atelier-videos video {
             width: 100%;
             display: block;
@@ -492,7 +482,6 @@ function fileIcon($path)
             max-height: 260px;
         }
 
->>>>>>> f6b9632 ( finally code)
         .no-photo {
             height: 180px;
             display: flex;
@@ -512,9 +501,6 @@ function fileIcon($path)
             margin-bottom: 15px;
         }
 
-<<<<<<< HEAD
-        .atelier-body a {
-=======
         .atelier-body h5 {
             color: #a1a1aa;
             font-size: 12px;
@@ -525,21 +511,12 @@ function fileIcon($path)
 
         .atelier-body a,
         .module-resources a {
->>>>>>> f6b9632 ( finally code)
             display: block;
             color: #8b5cf6;
             font-size: 14px;
             font-weight: bold;
             text-decoration: none;
             margin-top: 8px;
-<<<<<<< HEAD
-        }
-
-        .atelier-body a:hover {
-            color: #a855f7;
-        }
-
-=======
             word-break: break-word;
         }
 
@@ -559,7 +536,6 @@ function fileIcon($path)
             text-transform: uppercase;
         }
 
->>>>>>> f6b9632 ( finally code)
         /* CONTACT */
 
         .contact {
@@ -757,13 +733,6 @@ function fileIcon($path)
                 <h3><?= e($module["title"]) ?></h3>
                 <p><?= e($module["description"]) ?></p>
 
-<<<<<<< HEAD
-                <div class="ateliers">
-                    <?php foreach ($module["ateliers"] as $atelier): ?>
-                        <?php
-                            $photos = filesIn($atelier["folder"], ["jpg", "jpeg", "png", "webp", "gif"]);
-                            $pdfs   = filesIn($atelier["folder"], ["pdf"]);
-=======
                 <?php if (!empty($module["ressources"])): ?>
                     <div class="module-resources">
                         <h5>Ressources du module</h5>
@@ -783,7 +752,6 @@ function fileIcon($path)
                             $videos     = collect($atelier["videos"]   ?? [], $folder, $EXT_VIDEOS);
                             $fichiers   = collect($atelier["fichiers"] ?? [], $folder, $EXT_FILES);
                             $ressources = $atelier["ressources"] ?? [];
->>>>>>> f6b9632 ( finally code)
                         ?>
                         <div class="atelier">
 
@@ -795,20 +763,6 @@ function fileIcon($path)
                                              loading="lazy">
                                     <?php endforeach; ?>
                                 </div>
-<<<<<<< HEAD
-                            <?php else: ?>
-                                <div class="no-photo">Aucune photo pour le moment</div>
-                            <?php endif; ?>
-
-                            <div class="atelier-body">
-                                <h4><?= e($atelier["title"]) ?></h4>
-
-                                <?php foreach ($pdfs as $pdf): ?>
-                                    <a href="<?= e(webPath($pdf)) ?>" target="_blank" rel="noopener">
-                                        📄 <?= e(basename($pdf)) ?>
-                                    </a>
-                                <?php endforeach; ?>
-=======
                             <?php elseif (!$videos): ?>
                                 <div class="no-photo">Aucune photo pour le moment</div>
                             <?php endif; ?>
@@ -853,7 +807,6 @@ function fileIcon($path)
                                         </a>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
->>>>>>> f6b9632 ( finally code)
                             </div>
 
                         </div>

@@ -1,4 +1,3 @@
-
 <?php
 
 /* =========================
@@ -26,7 +25,9 @@ $skills = [
 /*
  * MODULES > ATELIERS > photos / vidéos / fichiers / ressources
  *
- * - Les dossiers doivent se trouver dans "public/" pour être visibles sur Vercel.
+ * - Idéal : mettre les dossiers dans "public/" (Rania-portfolio/public/module 1/...).
+ * - Si les dossiers sont à la racine du projet (à côté de "api"), le code les
+ *   retrouve aussi et les sert lui-même.
  * - "photos", "videos", "fichiers" : chemins listés à la main (optionnel).
  *   Le code ajoute AUSSI automatiquement tout ce qui est trouvé dans le dossier.
  * - "ressources" : liens externes (cours, GitHub, Figma, YouTube...).
@@ -128,24 +129,71 @@ function e($text)
     return htmlspecialchars((string) $text, ENT_QUOTES, 'UTF-8');
 }
 
-// Dossier public sur le disque (essaie plusieurs emplacements possibles)
-function publicDir()
+// Dossiers où chercher les fichiers : public/ d'abord, puis la racine du projet
+function baseDirs()
 {
-    static $dir = null;
-    if ($dir !== null) {
-        return $dir;
+    static $bases = null;
+    if ($bases !== null) {
+        return $bases;
     }
 
+    $root = dirname(__DIR__);
     $candidates = [
-        dirname(__DIR__) . '/public',
+        $root . '/public',
+        $root,
         getcwd() . '/public',
+        getcwd(),
     ];
-    foreach ($candidates as $candidate) {
-        if (is_dir($candidate)) {
-            return $dir = $candidate;
+
+    $bases = [];
+    foreach ($candidates as $dir) {
+        $real = realpath($dir);
+        if ($real && is_dir($real) && !in_array($real, $bases, true)) {
+            $bases[] = $real;
         }
     }
-    return $dir = $candidates[0];
+    return $bases;
+}
+
+// Retrouve un fichier ou un dossier, même si les majuscules/minuscules sont différentes.
+// Retourne ['base' => ..., 'path' => chemin réel] ou null si introuvable.
+function resolvePath($path)
+{
+    $parts = array_filter(explode('/', str_replace('\\', '/', $path)), function ($p) {
+        return $p !== '' && $p !== '.' && $p !== '..';
+    });
+
+    foreach (baseDirs() as $base) {
+        $current = $base;
+        $real    = [];
+
+        foreach ($parts as $part) {
+            if (!is_dir($current)) {
+                continue 2;
+            }
+            $found = null;
+            if (file_exists($current . '/' . $part)) {
+                $found = $part;
+            } else {
+                foreach (scandir($current) as $entry) {
+                    if (strcasecmp($entry, $part) === 0) {
+                        $found = $entry;
+                        break;
+                    }
+                }
+            }
+            if ($found === null) {
+                continue 2;
+            }
+            $current .= '/' . $found;
+            $real[]   = $found;
+        }
+
+        if ($real) {
+            return ['base' => $base, 'path' => implode('/', $real)];
+        }
+    }
+    return null;
 }
 
 // Transforme "module 1/atelier 1/at1.jpeg" en URL valide (espaces encodés)
@@ -154,10 +202,28 @@ function webPath($path)
     return '/' . implode('/', array_map('rawurlencode', explode('/', $path)));
 }
 
+// URL d'un fichier : directe si il est dans public/, sinon via index.php
+function mediaUrl($path)
+{
+    $r = resolvePath($path);
+    if (!$r) {
+        return webPath($path);
+    }
+    if (basename($r['base']) === 'public') {
+        return webPath($r['path']);
+    }
+    return '/?media=' . rawurlencode($r['path']);
+}
+
 // Liste les fichiers d'un dossier selon leurs extensions
 function filesIn($folder, array $extensions)
 {
-    $dir = publicDir() . '/' . $folder;
+    $r = resolvePath($folder);
+    if (!$r) {
+        return [];
+    }
+
+    $dir = $r['base'] . '/' . $r['path'];
     if (!is_dir($dir)) {
         return [];
     }
@@ -166,7 +232,7 @@ function filesIn($folder, array $extensions)
     foreach (scandir($dir) as $file) {
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
         if (in_array($ext, $extensions, true)) {
-            $result[] = $folder . '/' . $file;
+            $result[] = $r['path'] . '/' . $file;
         }
     }
     sort($result, SORT_NATURAL | SORT_FLAG_CASE);
@@ -176,14 +242,20 @@ function filesIn($folder, array $extensions)
 // Fusionne la liste écrite à la main et celle trouvée dans le dossier (sans doublons)
 function collect(array $manual, $folder, array $extensions)
 {
-    // Si le dossier est lisible, on ignore les chemins écrits à la main qui n'existent pas
-    // (évite les images cassées en cas de faute de frappe ou de majuscule différente).
-    if (is_dir(publicDir() . '/' . $folder)) {
-        $manual = array_filter($manual, function ($path) {
-            return is_file(publicDir() . '/' . $path);
-        });
+    $folderFound = resolvePath($folder) !== null;
+    $list = [];
+
+    foreach ($manual as $path) {
+        $r = resolvePath($path);
+        if ($r) {
+            $list[] = $r['path'];          // fichier trouvé : on prend le vrai nom
+        } elseif (!$folderFound) {
+            $list[] = $path;               // dossier illisible : on fait confiance au chemin écrit
+        }
+        // dossier lisible mais fichier absent : on l'ignore (pas d'image cassée)
     }
-    return array_values(array_unique(array_merge($manual, filesIn($folder, $extensions))));
+
+    return array_values(array_unique(array_merge($list, filesIn($folder, $extensions))));
 }
 
 // Type MIME d'une vidéo
@@ -204,6 +276,48 @@ function fileIcon($path)
         "sql" => "🗄️", "fig" => "🎨"
     ];
     return $icons[$ext] ?? "📎";
+}
+
+/* =========================
+   ENVOI DES FICHIERS (si hors de public/)
+   Utilisé par mediaUrl() : /?media=module%201/atelier%201/at1.jpeg
+========================= */
+
+if (isset($_GET['media'])) {
+    $requested = str_replace('\\', '/', (string) $_GET['media']);
+    $ext       = strtolower(pathinfo($requested, PATHINFO_EXTENSION));
+
+    // Seuls les dossiers d'ateliers déclarés plus haut sont accessibles
+    $allowedFolder = false;
+    foreach ($modules as $m) {
+        foreach ($m["ateliers"] as $a) {
+            if (strpos(strtolower($requested), strtolower($a["folder"]) . '/') === 0) {
+                $allowedFolder = true;
+            }
+        }
+    }
+
+    $allowedExt = array_merge($EXT_PHOTOS, $EXT_VIDEOS, $EXT_FILES);
+    $r    = ($allowedFolder && in_array($ext, $allowedExt, true)) ? resolvePath($requested) : null;
+    $file = $r ? $r['base'] . '/' . $r['path'] : null;
+
+    if (!$file || !is_file($file)) {
+        http_response_code(404);
+        exit('Fichier introuvable');
+    }
+
+    $mimes = [
+        "jpg" => "image/jpeg", "jpeg" => "image/jpeg", "png" => "image/png",
+        "webp" => "image/webp", "gif" => "image/gif",
+        "mp4" => "video/mp4", "webm" => "video/webm", "ogg" => "video/ogg", "mov" => "video/quicktime",
+        "pdf" => "application/pdf", "txt" => "text/plain; charset=utf-8"
+    ];
+
+    header('Content-Type: ' . ($mimes[$ext] ?? 'application/octet-stream'));
+    header('Content-Length: ' . filesize($file));
+    header('Cache-Control: public, max-age=86400');
+    readfile($file);
+    exit;
 }
 
 ?>
@@ -777,7 +891,7 @@ function fileIcon($path)
                             <?php if ($photos): ?>
                                 <div class="atelier-photos">
                                     <?php foreach ($photos as $photo): ?>
-                                        <img src="<?= e(webPath($photo)) ?>"
+                                        <img src="<?= e(mediaUrl($photo)) ?>"
                                              alt="<?= e($atelier["title"]) ?>"
                                              loading="lazy">
                                     <?php endforeach; ?>
@@ -790,7 +904,7 @@ function fileIcon($path)
                                 <div class="atelier-videos">
                                     <?php foreach ($videos as $video): ?>
                                         <video controls preload="metadata">
-                                            <source src="<?= e(webPath($video)) ?>" type="<?= e(videoType($video)) ?>">
+                                            <source src="<?= e(mediaUrl($video)) ?>" type="<?= e(videoType($video)) ?>">
                                             Votre navigateur ne supporte pas la vidéo.
                                         </video>
                                     <?php endforeach; ?>
@@ -803,7 +917,7 @@ function fileIcon($path)
                                 <?php if ($fichiers): ?>
                                     <h5>Fichiers</h5>
                                     <?php foreach ($fichiers as $fichier): ?>
-                                        <a href="<?= e(webPath($fichier)) ?>" target="_blank" rel="noopener">
+                                        <a href="<?= e(mediaUrl($fichier)) ?>" target="_blank" rel="noopener">
                                             <?= fileIcon($fichier) ?> <?= e(basename($fichier)) ?>
                                         </a>
                                     <?php endforeach; ?>
@@ -812,7 +926,7 @@ function fileIcon($path)
                                 <?php if ($videos): ?>
                                     <h5>Vidéos</h5>
                                     <?php foreach ($videos as $video): ?>
-                                        <a href="<?= e(webPath($video)) ?>" target="_blank" rel="noopener">
+                                        <a href="<?= e(mediaUrl($video)) ?>" target="_blank" rel="noopener">
                                             🎬 <?= e(basename($video)) ?>
                                         </a>
                                     <?php endforeach; ?>

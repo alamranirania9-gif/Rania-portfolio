@@ -1,3 +1,4 @@
+
 <?php
 
 /* =========================
@@ -54,9 +55,7 @@ $modules = [
                 "folder"     => "module 1/atelier2",
                 "photos"     => [],
                 "videos"     => [],
-                "fichiers"   => [
-                    "module 1/atelier2/maquettes_application_annoncez.pdf"
-                ],
+                "fichiers"   => [],
                 "ressources" => [
                     // ["label" => "Maquette Figma", "url" => "https://www.figma.com/..."]
                 ]
@@ -80,6 +79,26 @@ $modules = [
         "description" => "Ateliers pratiques du deuxième module.",
         "ressources"  => [],
         "ateliers"    => [
+            [
+                "title"      => "AT5",
+                "folder"     => "module2/AT5",
+                "photos"     => [],
+                "videos"     => [],
+                "fichiers"   => [
+                    "module2/AT5/AT5.docx"
+                ],
+                "ressources" => []
+            ],
+            [
+                "title"      => "Atelier 2",
+                "folder"     => "module2/ATELIER 2",
+                "photos"     => [],
+                "videos"     => [],
+                "fichiers"   => [
+                    "module2/ATELIER 2/ATELIER2.docx"
+                ],
+                "ressources" => []
+            ],
             [
                 "title"      => "Atelier 1",
                 "folder"     => "module2/atelierse1",

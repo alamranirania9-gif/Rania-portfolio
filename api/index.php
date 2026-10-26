@@ -1,662 +1,468 @@
 <?php
+declare(strict_types=1);
 
-/* =========================
-   DONNÉES
-========================= */
+/* ============================================================
+   PORTFOLIO — RANIA AL AMRANI   (PHP seul, sans base de données)
+   >>> Tout ce que tu veux changer est juste en dessous. <<<
+   ============================================================ */
 
-$name = "Rania Al Amrani";
-$job  = "Développeuse Web";
+date_default_timezone_set('Europe/Paris');
 
-$about = "Je suis étudiante en Développement Digital à l'OFPPT.
-Je m'intéresse au développement web, à la programmation,
-aux bases de données et au design UI/UX.";
+$nom       = 'Rania Al Amrani';
+$initiales = 'RA';
+$poste     = 'Étudiante en développement web';
+$accroche  = "J’apprends, je pratique, et je note chaque étape de mon parcours.";
+$email     = 'rania@example.com';
 
-$skills = [
-    "HTML / CSS",
-    "JavaScript",
-    "PHP",
-    "MySQL",
-    "Python",
-    "Bootstrap",
-    "Figma",
-    "UI / UX Design"
+/* --- Tes photos : fichiers placés dans le dossier public/images --- */
+$photo_profil = '/images/PH3.jpeg';
+$photos       = [
+    ['src' => '/images/PH3.jpeg', 'legende' => 'Mon atelier du Module 1'],
+    ['src' => '/images/PH7.jpeg', 'legende' => 'Mon atelier du Module 2'],
 ];
 
-/*
- * IMPORTANT (Vercel) :
- * - Les dossiers "module 1" et "module2" doivent être DANS le dossier "public/".
- * - Les chemins ci-dessous doivent être écrits EXACTEMENT comme les vrais noms
- *   (majuscules/minuscules et espaces compris).
- * - Tous les fichiers sont listés à la main (Vercel ne permet pas de scanner public/ depuis PHP).
- */
-$modules = [
+/* --- Tes documents : fichiers placés dans le dossier public/docs --- */
+$ateliers = [
     [
-        "title"       => "Module 1",
-        "description" => "Ateliers pratiques du premier module.",
-        "ressources"  => [],
-        "ateliers"    => [
-            [
-                "title"      => "Atelier 1",
-                "photos"     => [
-                    "module 1/atelier 1/at1.jpeg",
-                    "module 1/atelier 1/at11.jpeg"
-                ],
-                "videos"     => [],
-                "fichiers"   => [],
-                "ressources" => []
-            ],
-            [
-                "title"      => "Atelier 2",
-                "photos"     => [],
-                "videos"     => [],
-                "fichiers"   => [
-                    "module 1/atelier2/maquettes_application_annoncez.pdf"
-                ],
-                "ressources" => []
-            ],
-            [
-                "title"      => "Atelier 3",
-                "photos"     => [
-                    "module 1/atelier3/photo.jpeg"
-                ],
-                "videos"     => [
-                    "module 1/atelier3/vid1.mp4"
-                ],
-                "fichiers"   => [],
-                "ressources" => []
-            ]
-        ]
+        'titre'  => 'Atelier 2 — Module 1',
+        'fichier'=> '/docs/ATELIER2.docx',
+        'texte'  => 'Premier atelier : découverte de l’environnement de travail et mise en pratique des bases.',
     ],
     [
-        "title"       => "Module 2",
-        "description" => "Ateliers pratiques du deuxième module.",
-        "ressources"  => [],
-        "ateliers"    => [
-            [
-                "title"      => "Atelier 5",
-                "photos"     => [],
-                "videos"     => [],
-                "fichiers"   => [
-                    "module2/AT5/AT5.docx"
-                ],
-                "ressources" => []
-            ],
-            [
-                "title"      => "Atelier 2",
-                "photos"     => [],
-                "videos"     => [],
-                "fichiers"   => [
-                    "module2/ATELIER 2/ATELIER2.docx"
-                ],
-                "ressources" => []
-            ],
-            [
-                "title"      => "Atelier 1",
-                "photos"     => [
-                    "module2/atelierse1/photos.jpeg"
-                ],
-                "videos"     => [],
-                "fichiers"   => [],
-                "ressources" => []
-            ]
-        ]
-    ]
+        'titre'  => 'Atelier 5 — Module 2',
+        'fichier'=> '/docs/AT5.docx',
+        'texte'  => 'Atelier du Module 2 : travail guidé, captures d’écran et comptes rendus des étapes.',
+    ],
 ];
 
-/* =========================
-   AJOUT AUTOMATIQUE
-   Ajoute une photo / vidéo / fichier dans public/<module>/<atelier>/
-   et le lien apparaît tout seul sur le site.
-   (Vercel : ajoute "includeFiles": "public/**" dans vercel.json)
-========================= */
-$publicDir = dirname(__DIR__) . '/public';
-if (!is_dir($publicDir)) { $publicDir = __DIR__ . '/public'; }
+/* ============================================================
+   OU TES TÂCHES SONT ENREGISTREES — une vraie base de données.
+   Elles restent en place après un redémarrage ou un redéploiement.
+   >> Mets ces infos en variables d'environnement chez ton hébergeur
+      (Vercel : Settings > Environment Variables). <<
+   Si la base n'est pas encore reglee, les tâches sont gardées
+   dans un fichier journal.json (repli temporaire).
+   ============================================================ */
+$db = [
+    'hote'         => getenv('DB_HOST') ?: 'localhost',
+    'port'         => getenv('DB_PORT') ?: '3306',
+    'nom'          => getenv('DB_NAME') ?: 'rania_portfolio',
+    'user'         => getenv('DB_USER') ?: 'root',
+    'mot_de_passe' => getenv('DB_PASS') ?: '',
+    'dsn'          => getenv('DB_DSN') ?: '',   // optionnel : sqlite:/chemin/taches.db
+];
 
-$autoModules = [];
-foreach (glob($publicDir . '/module*', GLOB_ONLYDIR) ?: [] as $modDir) {
-    $modName = basename($modDir);
-    $ateliers = [];
-    foreach (glob($modDir . '/*', GLOB_ONLYDIR) ?: [] as $atDir) {
-        $atName = basename($atDir);
-        $at = ["title" => ucfirst($atName), "photos" => [], "videos" => [], "fichiers" => [], "ressources" => []];
-        foreach (scandir($atDir) as $f) {
-            if ($f[0] === '.' || is_dir("$atDir/$f")) continue;
-            $ext  = strtolower(pathinfo($f, PATHINFO_EXTENSION));
-            $path = "$modName/$atName/$f";
-            if (in_array($ext, ["jpg","jpeg","png","gif","webp"]))      $at["photos"][]   = $path;
-            elseif (in_array($ext, ["mp4","webm","ogg","mov"]))          $at["videos"][]   = $path;
-            else                                                         $at["fichiers"][] = $path;
-        }
-        $ateliers[] = $at;
+$journal  = __DIR__ . '/journal.json';
+if (!is_dir(__DIR__) || !is_writable(__DIR__)) {
+    $journal = sys_get_temp_dir() . '/journal_rania.json';
+}
+
+$bd_ok      = false;   // true = les tâches sont en base de données
+$bd_message = '';
+
+function bd(string $fichier): ?PDO
+{
+    global $db, $bd_ok, $bd_message;
+    static $pdo = null;
+    static $essai = false;
+    if ($essai) {
+        return $pdo;
     }
-    usort($ateliers, fn($a, $b) => strnatcasecmp($a["title"], $b["title"]));
-    $autoModules[] = [
-        "title"       => ucfirst($modName),
-        "description" => "Ateliers pratiques du " . $modName . ".",
-        "ressources"  => [],
-        "ateliers"    => array_values($ateliers)
-    ];
+    $essai = true;
+
+    try {
+        if ($db['dsn'] !== '') {
+            $pdo = new PDO($db['dsn']);
+        } else {
+            $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
+                $db['hote'], $db['port'], $db['nom']);
+            $pdo = new PDO($dsn, $db['user'], $db['mot_de_passe']);
+        }
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
+        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        if ($driver === 'sqlite') {
+            $pdo->exec('CREATE TABLE IF NOT EXISTS taches (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                texte TEXT NOT NULL,
+                date_ecrite TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)');
+        } else {
+            $pdo->exec('CREATE TABLE IF NOT EXISTS taches (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                texte TEXT NOT NULL,
+                date_ecrite DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+        }
+
+        // reprend une seule fois les tâches déjà dans le fichier
+        $nb = (int) $pdo->query('SELECT COUNT(*) FROM taches')->fetchColumn();
+        if ($nb === 0 && is_file($fichier)) {
+            $ancien = json_decode((string) file_get_contents($fichier), true);
+            if (is_array($ancien)) {
+                $ins = $pdo->prepare('INSERT INTO taches (texte) VALUES (?)');
+                foreach (array_reverse($ancien) as $t) {
+                    if (!empty($t['texte'])) {
+                        $ins->execute([(string) $t['texte']]);
+                    }
+                }
+            }
+            @rename($fichier, $fichier . '.bak');
+        }
+
+        $bd_ok = true;
+        return $pdo;
+    } catch (Throwable $e) {
+        $pdo = null;
+        $bd_message = 'Base de données indisponible pour l’instant : ' . $e->getMessage();
+        return null;
+    }
 }
-// Si des dossiers sont trouvés, on les utilise ; sinon la liste manuelle reste.
-if ($autoModules) { $modules = $autoModules; }
 
-/* =========================
-   FONCTIONS
-========================= */
-
-// Échappe le texte avant de l'afficher
-function e($text)
+function journal_ajouter(string $texte, string $fichier): bool
 {
-    return htmlspecialchars((string) $text, ENT_QUOTES, 'UTF-8');
+    $pdo = bd($fichier);
+    if ($pdo) {
+        $pdo->prepare('INSERT INTO taches (texte) VALUES (?)')->execute([$texte]);
+        return true;
+    }
+    $taches = journal_lire($fichier);
+    array_unshift($taches, ['date' => date('d/m/Y') . ' à ' . date('H:i'), 'texte' => $texte]);
+    return file_put_contents($fichier, json_encode($taches, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX) !== false;
 }
 
-// Transforme "module 1/atelier 1/at1.jpeg" en URL valide (espaces encodés)
-// Les fichiers dans public/ sont servis directement à la racine du site.
-function mediaUrl($path)
+function journal_lire(string $fichier): array
 {
-    return '/' . implode('/', array_map('rawurlencode', explode('/', $path)));
+    $pdo = bd($fichier);
+    if ($pdo) {
+        $rows = $pdo->query('SELECT texte, date_ecrite FROM taches ORDER BY id DESC LIMIT 100')->fetchAll();
+        $out = [];
+        foreach ($rows as $r) {
+            $date = (string) ($r['date_ecrite'] ?? '');
+            try {
+                $dt = new DateTime($date);
+                $date = $dt->format('d/m/Y') . ' à ' . $dt->format('H:i');
+            } catch (Throwable $e) {
+                // la date reste telle quelle
+            }
+            $out[] = ['date' => $date, 'texte' => (string) $r['texte']];
+        }
+        return $out;
+    }
+    if (!is_file($fichier)) {
+        return [];
+    }
+    $data = json_decode((string) file_get_contents($fichier), true);
+    return is_array($data) ? $data : [];
 }
 
-// Type MIME d'une vidéo
-function videoType($path)
-{
-    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-    $types = ["mp4" => "video/mp4", "webm" => "video/webm", "ogg" => "video/ogg", "mov" => "video/quicktime"];
-    return $types[$ext] ?? "video/mp4";
+
+/* --- Ajout d'une tâche (la date du jour est mise toute seule) --- */
+$erreur  = '';
+$ajout_ok = false;
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    $tache = trim((string) ($_POST['tache'] ?? ''));
+    if ($tache === '') {
+        $erreur = 'Écris ta tâche du jour avant de cliquer sur Ajouter.';
+    } else {
+        if (journal_ajouter($tache, $journal)) {
+            $ajout_ok = true;
+        } else {
+            $erreur = 'Je n’arrive pas à enregistrer sur ce serveur. Essaie un autre hébergement PHP.';
+        }
+    }
 }
 
-// Icône selon l'extension du fichier
-function fileIcon($path)
-{
-    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-    $icons = [
-        "pdf" => "📄", "doc" => "📝", "docx" => "📝", "ppt" => "📊", "pptx" => "📊",
-        "xls" => "📈", "xlsx" => "📈", "zip" => "🗜️", "rar" => "🗜️", "txt" => "📃",
-        "sql" => "🗄️", "fig" => "🎨"
-    ];
-    return $icons[$ext] ?? "📎";
-}
+$taches = journal_lire($journal);
 
-?>
-<!DOCTYPE html>
+?><!DOCTYPE html>
 <html lang="fr">
 <head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?= htmlspecialchars($nom) ?> — Portfolio</title>
+<meta name="description" content="Portfolio de <?= htmlspecialchars($nom) ?> : ateliers du Module 1 et du Module 2, photos et journal quotidien.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+    :root{
+        --rose:#FF2D78;
+        --rose-fonce:#C2185B;
+        --blush:#FFF1F6;
+        --blush2:#FFE3EE;
+        --prune:#33112B;
+        --gris:#7A5C6E;
+        --blanc:#FFFFFF;
+        --ombre:0 18px 45px rgba(255,45,120,.14);
+        --rond:22px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+        font-family:'DM Sans',system-ui,sans-serif;
+        background:var(--blush);
+        color:var(--prune);
+        line-height:1.65;
+    }
+    h1,h2,h3{font-family:'Playfair Display',Georgia,serif;line-height:1.15}
+    a{color:var(--rose-fonce)}
+    .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= e($name) ?> | Portfolio</title>
+    /* ---- Navigation ---- */
+    nav{
+        position:sticky;top:0;z-index:20;
+        background:rgba(255,241,246,.92);
+        backdrop-filter:blur(8px);
+        border-bottom:1px solid var(--blush2);
+    }
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;flex-wrap:wrap}
+    .logo{font-family:'Playfair Display',serif;font-weight:700;font-size:20px;color:var(--prune);text-decoration:none}
+    .logo span{color:var(--rose)}
+    .nav-links{display:flex;gap:18px;flex-wrap:wrap}
+    .nav-links a{text-decoration:none;color:var(--gris);font-weight:500;font-size:15px}
+    .nav-links a:hover{color:var(--rose)}
 
-    <style>
+    /* ---- Accueil avec nom + photo ---- */
+    .hero{padding:60px 0 70px}
+    .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+    .etiquette{
+        display:inline-block;background:var(--blush2);color:var(--rose-fonce);
+        font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+        padding:7px 14px;border-radius:999px;margin-bottom:18px;
+    }
+    .hero h1{font-size:clamp(38px,6vw,62px);margin-bottom:14px}
+    .hero h1 em{color:var(--rose);font-style:italic}
+    .hero .poste{font-size:19px;font-weight:700;color:var(--rose-fonce);margin-bottom:12px}
+    .hero p{color:var(--gris);font-size:17px;max-width:46ch}
+    .hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+    .btn{
+        display:inline-block;text-decoration:none;font-weight:700;font-size:15px;
+        padding:13px 24px;border-radius:999px;border:2px solid var(--rose);
+    }
+    .btn-rose{background:var(--rose);color:#fff}
+    .btn-rose:hover{background:var(--rose-fonce);border-color:var(--rose-fonce)}
+    .btn-vide{background:transparent;color:var(--rose-fonce)}
+    .btn-vide:hover{background:var(--blush2)}
 
-        html { scroll-behavior: smooth; }
+    /* ---- Cadre photo ---- */
+    .photo-cadre{
+        position:relative;width:min(340px,80vw);margin:0 auto;aspect-ratio:4/5;
+        border-radius:200px 200px var(--rond) var(--rond);
+        background:var(--blush2);
+        box-shadow:var(--ombre);
+        overflow:hidden;
+        border:6px solid #fff;
+    }
+    .photo-cadre::before{
+        content:"";position:absolute;inset:-40px;z-index:-1;
+        background:radial-gradient(circle at 70% 20%,var(--rose) 0%,transparent 55%);
+        opacity:.18;
+    }
+    .photo-cadre img{width:100%;height:100%;object-fit:cover;display:block}
+    .photo-initiales{
+        display:none;position:absolute;inset:0;
+        align-items:center;justify-content:center;
+        font-family:'Playfair Display',serif;font-size:74px;font-weight:700;color:var(--rose-fonce);
+    }
+    .photo-cadre.sans-photo img{display:none}
+    .photo-cadre.sans-photo .photo-initiales{display:flex}
+    .photo-nom{
+        text-align:center;margin-top:16px;font-weight:700;color:var(--rose-fonce);font-size:15px;
+    }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* ---- Sections ---- */
+    section{padding:52px 0}
+    .section-tete{margin-bottom:28px}
+    .section-tete h2{font-size:32px}
+    .section-tete h2::after{content:"";display:block;width:64px;height:4px;background:var(--rose);border-radius:4px;margin-top:10px}
+    .section-tete p{color:var(--gris);margin-top:10px}
+    .carte{
+        background:var(--blanc);border-radius:var(--rond);padding:26px;
+        box-shadow:var(--ombre);border:1px solid var(--blush2);
+    }
+    .grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px}
+    .carte h3{font-size:21px;margin-bottom:8px}
+    .carte p{color:var(--gris);font-size:15px;margin-bottom:16px}
+    .module{
+        display:inline-block;background:var(--blush2);color:var(--rose-fonce);
+        font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;margin-bottom:12px;
+    }
 
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            background: #050505;
-            color: #ffffff;
-        }
+    /* ---- Galerie ---- */
+    .galerie{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+    .galerie figure{background:#fff;border-radius:var(--rond);overflow:hidden;box-shadow:var(--ombre);border:1px solid var(--blush2)}
+    .galerie img{width:100%;height:230px;object-fit:cover;display:block}
+    .galerie figcaption{padding:14px 16px;font-size:14px;font-weight:500;color:var(--gris)}
 
-        header {
-            position: fixed;
-            width: 100%;
-            top: 0;
-            left: 0;
-            z-index: 1000;
-            background: rgba(5, 5, 5, 0.95);
-            border-bottom: 1px solid #222;
-        }
+    /* ---- Journal ---- */
+    .journal{background:linear-gradient(180deg,#fff 0%,var(--blush) 100%);border-radius:var(--rond);border:1px solid var(--blush2);padding:28px;box-shadow:var(--ombre)}
+    form{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+    textarea{
+        flex:1 1 260px;min-height:74px;resize:vertical;
+        border:2px dashed var(--blush2);background:#fff;border-radius:16px;
+        padding:14px;font:inherit;color:var(--prune);
+    }
+    textarea:focus{outline:none;border-color:var(--rose)}
+    form button{
+        border:0;background:var(--rose);color:#fff;font:inherit;font-weight:700;
+        padding:0 26px;border-radius:16px;cursor:pointer;
+    }
+    form button:hover{background:var(--rose-fonce)}
+    .msg{padding:12px 16px;border-radius:14px;font-weight:500;margin-bottom:18px}
+    .msg-ok{background:#E8F8EF;color:#1B7A45}
+    .msg-erreur{background:#FFF0F3;color:var(--rose-fonce)}
+    .liste{list-style:none;display:grid;gap:12px}
+    .liste li{background:#fff;border-left:5px solid var(--rose);border-radius:14px;padding:14px 18px;box-shadow:0 6px 18px rgba(255,45,120,.08)}
+    .liste time{display:block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--rose)}
+    .liste p{font-size:16px}
+    .vide{color:var(--gris);font-style:italic}
+    .ou{font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--rose-fonce);background:var(--blush2);border-radius:999px;padding:8px 16px;display:inline-block;margin-bottom:18px}
 
-        nav {
-            max-width: 1200px;
-            margin: auto;
-            padding: 20px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-        }
 
-        .logo { font-size: 28px; font-weight: bold; color: #a855f7; }
-        .logo span { color: white; }
+    footer{background:var(--prune);color:#fff;padding:38px 0;margin-top:40px;text-align:center}
+    footer a{color:#FFB3CE;font-weight:700;text-decoration:none}
+    footer small{display:block;margin-top:12px;color:#C9A9BC}
 
-        nav ul { display: flex; list-style: none; gap: 30px; }
-
-        nav ul li a {
-            text-decoration: none;
-            color: white;
-            font-size: 15px;
-            transition: 0.3s;
-        }
-
-        nav ul li a:hover { color: #a855f7; }
-
-        .burger { display: none; font-size: 26px; cursor: pointer; color: white; }
-
-        section { min-height: 100vh; padding: 120px 8% 70px; }
-
-        .home {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 60px;
-            max-width: 1200px;
-            margin: auto;
-        }
-
-        .home-text { max-width: 650px; }
-        .home-text h2 { color: #a1a1aa; margin-bottom: 15px; }
-        .home-text h1 { font-size: 58px; margin-bottom: 15px; }
-        .home-text h1 span { color: #a855f7; }
-        .home-text .job { color: #a855f7; font-size: 28px; margin-bottom: 25px; }
-        .home-text p { color: #c4c4c4; line-height: 1.8; font-size: 17px; }
-
-        .btn {
-            display: inline-block;
-            margin-top: 30px;
-            padding: 14px 28px;
-            background: #8b5cf6;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: bold;
-            transition: 0.3s;
-            box-shadow: 0 0 20px rgba(139, 92, 246, 0.25);
-        }
-
-        .btn:hover {
-            background: #a855f7;
-            transform: translateY(-4px);
-            box-shadow: 0 0 30px rgba(168, 85, 247, 0.45);
-        }
-
-        .profile {
-            width: 280px;
-            height: 280px;
-            border-radius: 50%;
-            border: 5px solid #8b5cf6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 70px;
-            font-weight: bold;
-            color: #a855f7;
-            background: #111111;
-            box-shadow: 0 0 30px rgba(139, 92, 246, 0.25), 0 0 80px rgba(139, 92, 246, 0.12);
-            overflow: hidden;
-        }
-
-        .title { text-align: center; font-size: 42px; margin-bottom: 55px; }
-        .title span { color: #a855f7; }
-
-        .about { max-width: 850px; margin: auto; text-align: center; }
-        .about p { color: #c4c4c4; line-height: 2; font-size: 18px; }
-
-        .skills {
-            max-width: 1100px;
-            margin: auto;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-        }
-
-        .skill {
-            background: #111111;
-            border: 1px solid #262626;
-            padding: 30px 20px;
-            text-align: center;
-            border-radius: 12px;
-            transition: 0.3s;
-        }
-
-        .skill:hover {
-            transform: translateY(-8px);
-            border-color: #8b5cf6;
-            box-shadow: 0 0 25px rgba(139, 92, 246, 0.18);
-        }
-
-        .modules {
-            max-width: 1100px;
-            margin: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 50px;
-        }
-
-        .module h3 { color: #a855f7; font-size: 28px; margin-bottom: 10px; }
-        .module > p { color: #c4c4c4; margin-bottom: 25px; }
-
-        .ateliers {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 25px;
-            align-items: start;
-        }
-
-        .atelier {
-            background: #111111;
-            border: 1px solid #262626;
-            border-radius: 15px;
-            overflow: hidden;
-            transition: 0.3s;
-        }
-
-        .atelier:hover {
-            transform: translateY(-8px);
-            border-color: #8b5cf6;
-            box-shadow: 0 0 30px rgba(139, 92, 246, 0.18);
-        }
-
-        .atelier-photos {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 2px;
-            background: #262626;
-        }
-
-        .atelier-photos img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            display: block;
-        }
-
-        .atelier-photos a { display: block; overflow: hidden; }
-        .atelier-photos a img { transition: 0.3s; }
-        .atelier-photos a:hover img { transform: scale(1.06); }
-
-        .module, .atelier { scroll-margin-top: 100px; }
-
-        .atelier-nav { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; }
-
-        .atelier-nav a {
-            padding: 8px 16px;
-            border: 1px solid #262626;
-            border-radius: 20px;
-            color: #c4c4c4;
-            font-size: 14px;
-            text-decoration: none;
-            transition: 0.3s;
-        }
-
-        .atelier-nav a:hover { border-color: #8b5cf6; color: #a855f7; }
-
-        .atelier-videos video {
-            width: 100%;
-            display: block;
-            background: #000;
-            max-height: 260px;
-        }
-
-        .no-photo {
-            height: 180px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #777;
-            font-size: 14px;
-        }
-
-        .atelier-body { padding: 25px; }
-        .atelier-body h4 { color: #a855f7; font-size: 20px; margin-bottom: 15px; }
-
-        .atelier-body h5 {
-            color: #a1a1aa;
-            font-size: 12px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin: 18px 0 4px;
-        }
-
-        .atelier-body a,
-        .module-resources a {
-            display: block;
-            color: #8b5cf6;
-            font-size: 14px;
-            font-weight: bold;
-            text-decoration: none;
-            margin-top: 8px;
-            word-break: break-word;
-        }
-
-        .atelier-body a:hover,
-        .module-resources a:hover { color: #a855f7; }
-
-        .module-resources { margin-bottom: 25px; }
-
-        .module-resources h5 {
-            color: #a1a1aa;
-            font-size: 12px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .contact { text-align: center; min-height: auto; }
-        .contact p { color: #c4c4c4; margin: 15px; }
-        .contact strong { color: #a855f7; }
-
-        footer {
-            text-align: center;
-            padding: 25px;
-            background: #020202;
-            border-top: 1px solid #222;
-            color: #777;
-        }
-
-        @media (max-width: 900px) {
-            .burger { display: block; }
-
-            nav ul {
-                display: none;
-                flex-direction: column;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background: #050505;
-                padding: 20px;
-                gap: 18px;
-                border-bottom: 1px solid #222;
-            }
-
-            nav ul.active { display: flex; }
-
-            .home { flex-direction: column; text-align: center; padding-top: 150px; }
-            .home-text h1 { font-size: 42px; }
-            .skills { grid-template-columns: repeat(2, 1fr); }
-            .ateliers { grid-template-columns: 1fr; }
-            .profile { width: 220px; height: 220px; font-size: 55px; }
-        }
-
-        @media (max-width: 500px) {
-            section { padding-left: 20px; padding-right: 20px; }
-            .skills { grid-template-columns: 1fr; }
-            .home-text h1 { font-size: 35px; }
-            .title { font-size: 32px; }
-        }
-
-    </style>
-
+    @media(max-width:820px){
+        .hero-grid{grid-template-columns:1fr;gap:34px}
+        .photo-cadre{order:-1;width:min(280px,72vw)}
+    }
+</style>
 </head>
 <body>
 
-<header>
-    <nav>
-        <div class="logo">Rania<span>.</span></div>
+<nav>
+    <div class="wrap nav-inner">
+        <a class="logo" href="#haut"><?= htmlspecialchars(explode(' ', $nom)[0]) ?><span>.</span></a>
 
-        <ul id="navMenu">
-            <li><a href="#home">Accueil</a></li>
-            <li><a href="#about">À propos</a></li>
-            <li><a href="#skills">Compétences</a></li>
-            <li><a href="#modules">Modules</a></li>
-            <li><a href="#contact">Contact</a></li>
-        </ul>
+        <div class="nav-links">
+            <a href="#apropos">À propos</a>
+            <a href="#ateliers">Ateliers</a>
+            <a href="#galerie">Photos</a>
+            <a href="#journal">Journal</a>
+            <a href="#contact">Contact</a>
+        </div>
+    </div>
+</nav>
 
-        <div class="burger" onclick="document.getElementById('navMenu').classList.toggle('active')">☰</div>
-    </nav>
+<header class="hero wrap" id="haut">
+    <div class="hero-grid">
+        <div>
+            <span class="etiquette">Mon portfolio</span>
+            <h1><?= htmlspecialchars($nom) ?></h1>
+            <p class="poste"><?= htmlspecialchars($poste) ?></p>
+            <p><?= htmlspecialchars($accroche) ?></p>
+            <div class="hero-btns">
+                <a class="btn btn-rose" href="#ateliers">Voir mes ateliers</a>
+                <a class="btn btn-vide" href="#journal">Mon journal</a>
+            </div>
+        </div>
+        <div>
+            <div class="photo-cadre" id="photo">
+                <img src="<?= htmlspecialchars($photo_profil) ?>" alt="Photo de <?= htmlspecialchars($nom) ?>"
+                     onerror="this.parentNode.classList.add('sans-photo')">
+                <span class="photo-initiales"><?= htmlspecialchars($initiales) ?></span>
+            </div>
+            <p class="photo-nom"><?= htmlspecialchars($nom) ?></p>
+        </div>
+    </div>
 </header>
 
-<section class="home" id="home">
-    <div class="home-text">
-        <h2>Bonjour, je suis</h2>
-        <h1>Rania <span>Al Amrani</span></h1>
-        <h2 class="job"><?= e($job) ?></h2>
-        <p>
-            Développeuse web passionnée par la création
-            d'interfaces modernes et d'applications fonctionnelles.
-        </p>
-        <a href="#modules" class="btn">Voir mes modules</a>
-    </div>
-
-    <div class="profile">RA</div>
-</section>
-
-<section id="about">
-    <h2 class="title">À <span>propos</span></h2>
-    <div class="about">
-        <p>
-            <?= e($about) ?>
-            Je suis motivée, curieuse et passionnée
-            par la création de solutions numériques.
-            Mon objectif est de développer mes compétences
-            en programmation et en conception d'interfaces.
-        </p>
+<section id="apropos" class="wrap">
+    <div class="section-tete"><h2>À propos</h2></div>
+    <div class="carte">
+        <p>Je m’appelle <strong><?= htmlspecialchars($nom) ?></strong>. Sur cette page je rassemble les
+        ateliers que je réalise, les photos de mon travail, et un journal où j’ajoute une tâche chaque jour.
+        Le but : garder une trace claire de ce que j’apprends, étape par étape.</p>
     </div>
 </section>
 
-<section id="skills">
-    <h2 class="title">Mes <span>compétences</span></h2>
-    <div class="skills">
-        <?php foreach ($skills as $skill): ?>
-            <div class="skill"><?= e($skill) ?></div>
+<section id="ateliers" class="wrap">
+    <div class="section-tete">
+        <h2>Mes ateliers</h2>
+        <p>Module 1 et Module 2.</p>
+    </div>
+    <div class="grille">
+        <?php foreach ($ateliers as $a): ?>
+            <article class="carte">
+                <span class="module">Atelier</span>
+                <h3><?= htmlspecialchars($a['titre']) ?></h3>
+                <p><?= htmlspecialchars($a['texte']) ?></p>
+                <a class="btn btn-vide" href="<?= htmlspecialchars($a['fichier']) ?>">Voir</a>
+            </article>
         <?php endforeach; ?>
     </div>
 </section>
 
-<section id="modules">
-
-    <h2 class="title">Mes <span>modules</span></h2>
-
-    <div class="modules">
-        <?php foreach ($modules as $mi => $module): ?>
-            <div class="module" id="module-<?= $mi + 1 ?>">
-
-                <h3><?= e($module["title"]) ?></h3>
-                <p><?= e($module["description"]) ?></p>
-
-                <div class="atelier-nav">
-                    <?php foreach ($module["ateliers"] as $ai => $a): ?>
-                        <a href="#m<?= $mi + 1 ?>-a<?= $ai + 1 ?>"><?= e($a["title"]) ?></a>
-                    <?php endforeach; ?>
-                </div>
-
-                <?php if (!empty($module["ressources"])): ?>
-                    <div class="module-resources">
-                        <h5>Ressources du module</h5>
-                        <?php foreach ($module["ressources"] as $res): ?>
-                            <a href="<?= e($res["url"]) ?>" target="_blank" rel="noopener">
-                                🔗 <?= e($res["label"]) ?>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-
-                <div class="ateliers">
-                    <?php foreach ($module["ateliers"] as $ai => $atelier): ?>
-                        <?php
-                            $photos     = $atelier["photos"]     ?? [];
-                            $videos     = $atelier["videos"]     ?? [];
-                            $fichiers   = $atelier["fichiers"]   ?? [];
-                            $ressources = $atelier["ressources"] ?? [];
-                        ?>
-                        <div class="atelier" id="m<?= $mi + 1 ?>-a<?= $ai + 1 ?>">
-
-                            <?php if ($photos): ?>
-                                <div class="atelier-photos">
-                                    <?php foreach ($photos as $photo): ?>
-                                        <a href="<?= e(mediaUrl($photo)) ?>" target="_blank" rel="noopener">
-                                            <img src="<?= e(mediaUrl($photo)) ?>"
-                                                 alt="<?= e($atelier["title"]) ?> - <?= e(basename($photo)) ?>"
-                                                 loading="lazy">
-                                        </a>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php elseif (!$videos): ?>
-                                <div class="no-photo">Aucune photo pour le moment</div>
-                            <?php endif; ?>
-
-                            <?php if ($videos): ?>
-                                <div class="atelier-videos">
-                                    <?php foreach ($videos as $video): ?>
-                                        <video controls preload="metadata">
-                                            <source src="<?= e(mediaUrl($video)) ?>" type="<?= e(videoType($video)) ?>">
-                                            Votre navigateur ne supporte pas la vidéo.
-                                        </video>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endif; ?>
-
-                            <div class="atelier-body">
-                                <h4><?= e($atelier["title"]) ?></h4>
-
-                                <?php if ($fichiers): ?>
-                                    <h5>Fichiers</h5>
-                                    <?php foreach ($fichiers as $fichier): ?>
-                                        <a href="<?= e(mediaUrl($fichier)) ?>" target="_blank" rel="noopener">
-                                            <?= fileIcon($fichier) ?> <?= e(basename($fichier)) ?>
-                                        </a>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-
-                                <?php if ($videos): ?>
-                                    <h5>Vidéos</h5>
-                                    <?php foreach ($videos as $video): ?>
-                                        <a href="<?= e(mediaUrl($video)) ?>" target="_blank" rel="noopener">
-                                            🎬 <?= e(basename($video)) ?>
-                                        </a>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-
-                                <?php if ($ressources): ?>
-                                    <h5>Ressources</h5>
-                                    <?php foreach ($ressources as $res): ?>
-                                        <a href="<?= e($res["url"]) ?>" target="_blank" rel="noopener">
-                                            🔗 <?= e($res["label"]) ?>
-                                        </a>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </div>
-
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-
-            </div>
+<section id="galerie" class="wrap">
+    <div class="section-tete">
+        <h2>Photos</h2>
+        <p>Quelques images de mes ateliers.</p>
+    </div>
+    <div class="galerie">
+        <?php foreach ($photos as $p): ?>
+            <figure>
+                <img src="<?= htmlspecialchars($p['src']) ?>" alt="<?= htmlspecialchars($p['legende']) ?>"
+                     onerror="this.style.display='none'">
+                <figcaption><?= htmlspecialchars($p['legende']) ?></figcaption>
+            </figure>
         <?php endforeach; ?>
     </div>
-
 </section>
 
-<section class="contact" id="contact">
-    <h2 class="title">Me <span>contacter</span></h2>
-    <p><strong>Email :</strong> votre.vrai.email@gmail.com</p>
-    <p><strong>Téléphone :</strong> +212 6 12 34 56 78</p>
-    <p><strong>Localisation :</strong> Maroc</p>
-    <a href="mailto:votre.vrai.email@gmail.com" class="btn">Contactez-moi</a>
+<section id="journal" class="wrap">
+    <div class="section-tete">
+        <h2>Mon journal quotidien</h2>
+        <p>Chaque jour j’écris ma tâche : elle s’ajoute tout de suite, avec la date du jour.</p>
+    </div>
+
+    <div class="journal">
+        <?php if ($ajout_ok): ?>
+            <div class="msg msg-ok">Ta tâche a bien été ajoutée.</div>
+        <?php elseif ($erreur !== ''): ?>
+            <div class="msg msg-erreur"><?= htmlspecialchars($erreur) ?></div>
+        <?php endif; ?>
+
+        <p class="ou">
+            <?php if ($bd_ok): ?>
+                Enregistré dans une base de données : tes tâches restent après un redémarrage ou un redéploiement.
+            <?php else: ?>
+                Enregistré pour l’instant dans un fichier sur ce serveur. Connecte une base de données pour tout garder après un redéploiement.
+            <?php endif; ?>
+        </p>
+        <?php if ($bd_message !== ''): ?>
+            <div class="msg msg-erreur"><?= htmlspecialchars($bd_message) ?></div>
+        <?php endif; ?>
+
+
+        <form method="post" action="#journal">
+            <textarea name="tache" placeholder="Ex : aujourd’hui j’ai fini l’atelier 5 du Module 2" required></textarea>
+            <button type="submit">Ajouter</button>
+        </form>
+
+        <?php if ($taches): ?>
+            <ul class="liste">
+                <?php foreach ($taches as $t): ?>
+                    <li>
+                        <time><?= htmlspecialchars($t['date'] ?? '') ?></time>
+                        <p><?= nl2br(htmlspecialchars($t['texte'] ?? '')) ?></p>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php else: ?>
+            <p class="vide">Aucune tâche pour l’instant. Écris la première ci-dessus.</p>
+        <?php endif; ?>
+    </div>
 </section>
 
-<footer>
-    © <?= date("Y") ?> <?= e($name) ?> — Portfolio
+<footer id="contact">
+    <div class="wrap">
+        <p><strong><?= htmlspecialchars($nom) ?></strong> — <?= htmlspecialchars($poste) ?></p>
+        <p><a href="mailto:<?= htmlspecialchars($email) ?>"><?= htmlspecialchars($email) ?></a></p>
+        <small>© <?= date('Y') ?> <?= htmlspecialchars($nom) ?></small>
+    </div>
 </footer>
-
-<script>
-    document.querySelectorAll('#navMenu a').forEach(function (link) {
-        link.addEventListener('click', function () {
-            document.getElementById('navMenu').classList.remove('active');
-        });
-    });
-</script>
 
 </body>
 </html>

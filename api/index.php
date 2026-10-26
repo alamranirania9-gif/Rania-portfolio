@@ -73,7 +73,7 @@ $modules = [
         "ressources"  => [],
         "ateliers"    => [
             [
-                "title"      => "AT5",
+                "title"      => "Atelier 5",
                 "photos"     => [],
                 "videos"     => [],
                 "fichiers"   => [
@@ -102,6 +102,43 @@ $modules = [
         ]
     ]
 ];
+
+/* =========================
+   AJOUT AUTOMATIQUE
+   Ajoute une photo / vidéo / fichier dans public/<module>/<atelier>/
+   et le lien apparaît tout seul sur le site.
+   (Vercel : ajoute "includeFiles": "public/**" dans vercel.json)
+========================= */
+$publicDir = dirname(__DIR__) . '/public';
+if (!is_dir($publicDir)) { $publicDir = __DIR__ . '/public'; }
+
+$autoModules = [];
+foreach (glob($publicDir . '/module*', GLOB_ONLYDIR) ?: [] as $modDir) {
+    $modName = basename($modDir);
+    $ateliers = [];
+    foreach (glob($modDir . '/*', GLOB_ONLYDIR) ?: [] as $atDir) {
+        $atName = basename($atDir);
+        $at = ["title" => ucfirst($atName), "photos" => [], "videos" => [], "fichiers" => [], "ressources" => []];
+        foreach (scandir($atDir) as $f) {
+            if ($f[0] === '.' || is_dir("$atDir/$f")) continue;
+            $ext  = strtolower(pathinfo($f, PATHINFO_EXTENSION));
+            $path = "$modName/$atName/$f";
+            if (in_array($ext, ["jpg","jpeg","png","gif","webp"]))      $at["photos"][]   = $path;
+            elseif (in_array($ext, ["mp4","webm","ogg","mov"]))          $at["videos"][]   = $path;
+            else                                                         $at["fichiers"][] = $path;
+        }
+        $ateliers[] = $at;
+    }
+    usort($ateliers, fn($a, $b) => strnatcasecmp($a["title"], $b["title"]));
+    $autoModules[] = [
+        "title"       => ucfirst($modName),
+        "description" => "Ateliers pratiques du " . $modName . ".",
+        "ressources"  => [],
+        "ateliers"    => array_values($ateliers)
+    ];
+}
+// Si des dossiers sont trouvés, on les utilise ; sinon la liste manuelle reste.
+if ($autoModules) { $modules = $autoModules; }
 
 /* =========================
    FONCTIONS
